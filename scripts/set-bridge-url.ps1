@@ -5,17 +5,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+$src = Join-Path $root "internal\bridge\static\wallet\config.js"
 $cfg = Join-Path $root "docs\wallet\config.js"
 $url = $BridgeUrl.Trim().TrimEnd('/')
-$content = @"
-// Auto-generated — bridge API for GitHub Pages wallet UI
-window.SHIVA_BRIDGE_URL = '$url';
-"@
-Set-Content -Path $cfg -Value $content -Encoding utf8
-Write-Host "Updated $cfg"
-Write-Host ""
-Write-Host "Next:"
-Write-Host "  1. GitHub repo → Settings → Secrets and variables → Actions → Variables"
-Write-Host "     Name: SHIVA_BRIDGE_PUBLIC_URL  Value: $url"
-Write-Host "  2. git add docs/wallet/config.js && git commit -m 'Set bridge URL' && git push"
-Write-Host "  3. Re-run Actions → GitHub Pages workflow"
+
+Copy-Item $src $cfg -Force
+$content = Get-Content $cfg -Raw
+$content = $content -replace "window\.__SHIVA_BRIDGE_DEPLOY__ = window\.__SHIVA_BRIDGE_DEPLOY__ \|\| '';", "window.__SHIVA_BRIDGE_DEPLOY__ = '$url';"
+Set-Content -Path $cfg -Value $content -Encoding utf8 -NoNewline
+Write-Host "Updated $cfg with bridge $url"

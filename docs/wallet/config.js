@@ -1,6 +1,8 @@
 // Bridge API + wallet base URL (GitHub Pages, mobile WebView, local bridge).
 (function () {
   const STORAGE_KEY = 'SHIVA_BRIDGE_URL';
+  // Set by GitHub Actions (SHIVA_BRIDGE_PUBLIC_URL) or scripts/set-bridge-url.ps1
+  window.__SHIVA_BRIDGE_DEPLOY__ = window.__SHIVA_BRIDGE_DEPLOY__ || '';
   const params = new URLSearchParams(location.search);
   const fromQuery = params.get('bridge');
   if (fromQuery) {
@@ -10,7 +12,16 @@
   } else {
     let stored = '';
     try { stored = localStorage.getItem(STORAGE_KEY) || ''; } catch (_) {}
-    window.SHIVA_BRIDGE_URL = (stored || window.SHIVA_BRIDGE_URL || '').replace(/\/$/, '');
+    const deploy = (window.__SHIVA_BRIDGE_DEPLOY__ || '').replace(/\/$/, '');
+    window.SHIVA_BRIDGE_URL = (stored || deploy || window.SHIVA_BRIDGE_URL || '').replace(/\/$/, '');
+  }
+
+  // Local dev: auto-connect to shiva-bridge on same machine.
+  if (!window.SHIVA_BRIDGE_URL) {
+    const h = location.hostname;
+    if (h === 'localhost' || h === '127.0.0.1') {
+      window.SHIVA_BRIDGE_URL = 'http://127.0.0.1:9338';
+    }
   }
 
   const scripts = document.getElementsByTagName('script');

@@ -29,9 +29,7 @@ jobs:
           cp -r internal/bridge/static/wallet/* docs/wallet/
           BRIDGE="${{ vars.SHIVA_BRIDGE_PUBLIC_URL }}"
           if [ -n "$BRIDGE" ]; then
-            echo "window.SHIVA_BRIDGE_URL = '$BRIDGE';" > docs/wallet/config.js
-          elif [ ! -f docs/wallet/config.js ]; then
-            echo "window.SHIVA_BRIDGE_URL = '';" > docs/wallet/config.js
+            sed -i "s|window.__SHIVA_BRIDGE_DEPLOY__ = .*|window.__SHIVA_BRIDGE_DEPLOY__ = '${BRIDGE}';|" docs/wallet/config.js
           fi
 
       - name: Setup Pages
