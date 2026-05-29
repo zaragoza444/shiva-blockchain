@@ -238,6 +238,21 @@
         </div>
       </section>
 
+      <!-- AI -->
+      <section id="screen-ai" class="screen">
+        <div class="ai-header">
+          <h1 class="trade-header">Shiva AI</h1>
+          <span class="ai-mode-badge" id="ai-mode-badge">local</span>
+        </div>
+        <p class="msg ai-intro">Ask about your wallet, swaps, staking, bridge, NFTs, or the Shiva blockchain.</p>
+        <div class="ai-suggestions" id="ai-suggestions"></div>
+        <div class="ai-chat" id="ai-chat"></div>
+        <div class="ai-input-row">
+          <textarea id="ai-input" rows="2" placeholder="Ask Shiva AI…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
+          <button type="button" class="btn-primary ai-send" onclick="sendAIMessage()">Send</button>
+        </div>
+      </section>
+
       <!-- WEB3 -->
       <section id="screen-web3" class="screen">
         <h1 class="trade-header">Web3</h1>
@@ -279,6 +294,10 @@
       <button type="button" data-screen="web3" onclick="showTab('web3')">
         <span class="nav-icon">🌐</span>
         Web3
+      </button>
+      <button type="button" data-screen="ai" onclick="showTab('ai')">
+        <span class="nav-icon">✦</span>
+        AI
       </button>
     </nav>
   </div>

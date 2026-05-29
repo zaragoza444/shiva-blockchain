@@ -36,6 +36,7 @@ const SCREEN_ALIASES = {
   discover: 'discover', nft: 'discover', tasks: 'discover',
   createtoken: 'discover', token: 'discover', chains: 'discover', networks: 'discover',
   web3: 'web3', dapp: 'web3', dapps: 'web3',
+  ai: 'ai', assistant: 'ai', chat: 'ai',
 };
 
 function showTab(name) {
@@ -49,6 +50,7 @@ function showTab(name) {
   if (screen === 'trade') loadAmmPools();
   if (screen === 'earn') renderStakePools();
   if (screen === 'web3') renderWeb3();
+  if (screen === 'ai') initAI();
   if (screen === 'discover') {
     const sub = { createtoken: 'token', chains: 'networks' }[name] || name;
     if (['nft', 'tasks', 'token', 'networks'].includes(sub)) showDiscoverSection(sub);
@@ -294,6 +296,78 @@ function escapeHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
 
+const aiHistory = [];
+
+async function initAI() {
+  try {
+    const st = await api('/bridge/ai/status');
+    const badge = document.getElementById('ai-mode-badge');
+    if (badge) {
+      badge.textContent = st.cloud ? 'cloud' : 'local';
+      badge.classList.toggle('cloud', !!st.cloud);
+    }
+  } catch (_) {}
+  if (!aiHistory.length) {
+    appendAIBubble('assistant', 'Hi! I\'m Shiva AI. Ask about balances, swaps, stake, bridge, NFTs, or running your node.');
+  }
+  renderAISuggestions(['Show my balance', 'How do I swap?', 'Explain staking', 'What is Shiva Swap?']);
+}
+
+function renderAISuggestions(list) {
+  const el = document.getElementById('ai-suggestions');
+  if (!el) return;
+  el.innerHTML = (list || []).map(s =>
+    `<button type="button" class="ai-chip" onclick="askAI(${JSON.stringify(s)})">${escapeHtml(s)}</button>`
+  ).join('');
+}
+
+function appendAIBubble(role, text) {
+  const chat = document.getElementById('ai-chat');
+  if (!chat) return;
+  const div = document.createElement('div');
+  div.className = 'ai-bubble ' + role;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function askAI(text) {
+  const input = document.getElementById('ai-input');
+  if (input) input.value = text;
+  sendAIMessage();
+}
+
+async function sendAIMessage() {
+  const input = document.getElementById('ai-input');
+  const text = (input?.value || '').trim();
+  if (!text) return;
+  input.value = '';
+  appendAIBubble('user', text);
+  aiHistory.push({ role: 'user', content: text });
+  const typing = document.createElement('div');
+  typing.className = 'ai-bubble assistant typing';
+  typing.id = 'ai-typing';
+  typing.textContent = 'Thinking…';
+  document.getElementById('ai-chat')?.appendChild(typing);
+
+  try {
+    const j = await api('/bridge/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: aiHistory }),
+    });
+    typing.remove();
+    appendAIBubble('assistant', j.reply || 'No response.');
+    aiHistory.push({ role: 'assistant', content: j.reply });
+    if (j.suggestions?.length) renderAISuggestions(j.suggestions);
+    if (j.action?.type === 'navigate' && j.action.tab) showTab(j.action.tab);
+    if (j.action?.type === 'sheet' && j.action.sheet) openSheet(j.action.sheet);
+  } catch (e) {
+    typing.remove();
+    appendAIBubble('assistant', 'Could not reach Shiva AI. Is shiva-bridge running?');
+  }
+}
+
 async function init() {
   loadTheme();
   chains = await api('/bridge/chains');
@@ -316,6 +390,7 @@ async function init() {
   const hash = (location.hash || '').replace('#', '').toLowerCase();
   if (hash === 'swap') showTab('trade');
   else if (hash === 'web3' || hash === 'dapp') showTab('web3');
+  else if (hash === 'ai') showTab('ai');
   else if (hash && SCREEN_ALIASES[hash]) showTab(hash);
   renderWeb3();
 }

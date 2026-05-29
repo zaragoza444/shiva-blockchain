@@ -25,10 +25,14 @@ go build -o bin\shiva.exe .\cmd\shiva
 Write-Host "==> building shiva-bridge (wallet)"
 go build -o bin\shiva-bridge.exe .\cmd\shiva-bridge
 
+Write-Host "==> building shiva-ai"
+go build -o bin\shiva-ai.exe .\cmd\shiva-ai
+
 Write-Host ""
 Write-Host "Done:"
 Write-Host "  bin\shivad.exe"
 Write-Host "  bin\shiva.exe"
 Write-Host "  bin\shiva-bridge.exe"
+Write-Host "  bin\shiva-ai.exe"
 Write-Host "Run node: .\run-shiva.bat"
 Write-Host "Run wallet: .\run-shiva-wallet.bat"

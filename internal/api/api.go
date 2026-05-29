@@ -54,6 +54,8 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/api/v1/tx", s.handleSubmitTx)
 	mux.HandleFunc("/api/v1/faucet", s.handleFaucet)
 	mux.HandleFunc("/api/v1/chain", s.handleChainMeta)
+	mux.HandleFunc("/api/v1/ai/status", s.handleAIStatus)
+	mux.HandleFunc("/api/v1/ai/chat", s.handleAIChat)
 
 	if s.enableRPC {
 		rpcHandler := rpc.New(s.bc, s.pool, s.net)

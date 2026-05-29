@@ -37,6 +37,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/bridge/wallet/send", s.handleWalletSend)
 	mux.HandleFunc("/rpc", s.handleRPC)
 	s.registerDeFiRoutes(mux)
+	s.registerAIRoutes(mux)
 
 	sub, _ := fs.Sub(walletFS, "static/wallet")
 	mux.Handle("/wallet/", http.StripPrefix("/wallet/", http.FileServer(http.FS(sub))))

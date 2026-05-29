@@ -4,6 +4,7 @@ build:
 	go build -o bin/shivad ./cmd/shivad
 	go build -o bin/shiva ./cmd/shiva
 	go build -o bin/shiva-bridge ./cmd/shiva-bridge
+	go build -o bin/shiva-ai ./cmd/shiva-ai
 
 test:
 	go test ./internal/...

@@ -27,8 +27,17 @@ Open **http://127.0.0.1:9338/wallet/** for:
 | **NFT** | Mint & view Shiva NFTs |
 | **Tasks** | Earn rewards (SHIVA, wSHIVA) |
 | **Loans** | Borrow / lend with collateral |
+| **Shiva AI** | Wallet assistant (local + optional cloud LLM) |
 
 Chains: Shiva, Ethereum, BSC, Polygon, Arbitrum, Optimism, Avalanche, Base, Solana, Bitcoin, TRON, ALLTRA, testnet.
+
+### Shiva AI
+
+- **Wallet tab “AI”** — chat with portfolio-aware help
+- **API:** `POST /bridge/ai/chat` (wallet) · `POST /api/v1/ai/chat` (node)
+- **CLI:** `shiva-ai -ask "How do I swap?"` or interactive mode
+- **Cloud mode:** set `SHIVA_AI_API_KEY` (OpenAI-compatible endpoint via `SHIVA_AI_BASE_URL`)
+- **Local mode:** works without a key (built-in answers + navigation hints)
 
 Configs: `configs/chains.json`, `tokens.json`, `swap-pairs.json`
 
