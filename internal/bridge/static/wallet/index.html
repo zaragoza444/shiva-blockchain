@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="okx.css">
   <link rel="stylesheet" href="dex-swap.css">
   <script src="config.js"></script>
+  <script src="fallback-catalog.js"></script>
+  <script src="token-meta.js"></script>
 </head>
 <body data-theme="dark">
   <div class="app">
@@ -29,6 +31,10 @@
     <main class="screens">
       <!-- WALLET (Home) -->
       <section id="screen-wallet" class="screen active">
+        <div id="external-banner" class="external-banner hidden">
+          <p><strong>External wallet.</strong> Set your bridge URL for send, swap &amp; portfolio sync.</p>
+          <button type="button" class="btn-secondary" onclick="openSheet('settings')">Connect bridge</button>
+        </div>
         <div class="balance-section">
           <div class="balance-label">Total assets</div>
           <div class="balance-total" id="balance-total">—</div>
@@ -387,7 +393,36 @@
       <span>Wallet</span>
       <button type="button" class="btn-primary" onclick="createWallet(); closeSheet()">Create new wallet</button>
     </div>
-    <p class="msg">Shiva Wallet · bridge + native Ed25519</p>
+    <label>Bridge API (HTTPS)</label>
+    <input id="bridge-url-input" type="url" placeholder="https://your-shiva-bridge.onrender.com" autocomplete="off" />
+    <button type="button" class="btn-secondary" onclick="saveBridgeUrl()">Save bridge URL &amp; reload</button>
+    <p class="msg">On GitHub Pages this is required for wallet actions. Logos, USD prices &amp; charts work via CoinGecko without bridge.</p>
+    <p class="msg">Tip: <code>?bridge=https://your-bridge</code> in the URL saves automatically.</p>
+  </div>
+
+  <div class="sheet sheet-token" id="sheet-token">
+    <div class="sheet-handle"></div>
+    <div class="token-chart-head">
+      <div id="token-chart-icon"></div>
+      <div>
+        <div class="sheet-title" id="token-chart-title">Token</div>
+        <p class="token-chart-sub" id="token-chart-sub"></p>
+      </div>
+    </div>
+    <div class="token-chart-price" id="token-chart-price">—</div>
+    <div class="chart-periods" id="token-chart-periods">
+      <button type="button" class="active" data-period="24h" onclick="setTokenChartPeriod('24h')">24h</button>
+      <button type="button" data-period="7d" onclick="setTokenChartPeriod('7d')">7d</button>
+      <button type="button" data-period="30d" onclick="setTokenChartPeriod('30d')">30d</button>
+    </div>
+    <div class="token-chart-wrap">
+      <svg id="token-detail-chart" viewBox="0 0 360 120" preserveAspectRatio="none" aria-label="Token price chart"></svg>
+    </div>
+    <div class="chart-stats">
+      <span id="token-chart-change">—</span>
+      <span class="chart-stat-label">period change</span>
+    </div>
+    <button type="button" class="btn-primary" onclick="showTab('trade'); closeSheet()">Trade</button>
   </div>
 
   <div class="sheet" id="sheet-deposit">

@@ -8,6 +8,8 @@ import (
 func (s *Server) registerDeFiRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/bridge/chains", s.handleChains)
 	mux.HandleFunc("/bridge/tokens", s.handleTokens)
+	mux.HandleFunc("/bridge/market/prices", s.handleMarketPrices)
+	mux.HandleFunc("/bridge/market/chart", s.handleMarketChart)
 	mux.HandleFunc("/bridge/portfolio", s.handlePortfolio)
 	mux.HandleFunc("/bridge/deposit/info", s.handleDepositInfo)
 	mux.HandleFunc("/bridge/deposit", s.handleDeposit)
@@ -47,6 +49,29 @@ func (s *Server) handleChains(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleTokens(w http.ResponseWriter, r *http.Request) {
 	chain := r.URL.Query().Get("chain")
 	writeJSON(w, s.b.AllTokens(chain))
+}
+
+func (s *Server) handleMarketPrices(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "GET only", http.StatusMethodNotAllowed)
+		return
+	}
+	writeJSON(w, s.b.MarketPrices())
+}
+
+func (s *Server) handleMarketChart(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "GET only", http.StatusMethodNotAllowed)
+		return
+	}
+	sym := r.URL.Query().Get("symbol")
+	days := r.URL.Query().Get("days")
+	pts, err := s.b.MarketChart(sym, days)
+	if err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, map[string]interface{}{"symbol": sym, "days": days, "points": pts})
 }
 
 func (s *Server) handleStakePools(w http.ResponseWriter, r *http.Request) {

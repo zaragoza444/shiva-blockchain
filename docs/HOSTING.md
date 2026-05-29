@@ -5,6 +5,10 @@
 | Wallet UI (Pages) | https://zaragoza444.github.io/shiva-blockchain/wallet/ |
 | Bridge API | Your hosted `shiva-bridge` (required for send/swap/AI) |
 
+**Quick connect (external):** open  
+`https://zaragoza444.github.io/shiva-blockchain/wallet/?bridge=https://YOUR-bridge.onrender.com`  
+or set the URL under **Settings → Bridge API**.
+
 ## Step 1 — Deploy bridge (Render, recommended)
 
 1. Open [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**

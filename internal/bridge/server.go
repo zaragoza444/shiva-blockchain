@@ -120,8 +120,17 @@ func (m *middleware) handleCORS(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func originAllowed(origin string, allowed []string) bool {
-	for _, o := range allowed {
-		if o == "*" || strings.EqualFold(strings.TrimSpace(o), origin) {
+	o := strings.TrimSpace(origin)
+	for _, a := range allowed {
+		a = strings.TrimSpace(a)
+		if a == "" {
+			continue
+		}
+		if a == "*" || strings.EqualFold(a, o) {
+			return true
+		}
+		// GitHub Pages and similar: allow any origin on *.github.io when a github.io host is listed.
+		if strings.Contains(a, "github.io") && strings.Contains(o, "github.io") {
 			return true
 		}
 	}

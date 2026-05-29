@@ -20,8 +20,40 @@ const FEATURED_DAPPS = [
 ];
 
 async function api(path, opts = {}) {
-  const r = await fetch(API + path, opts);
-  return r.json();
+  if (!API) return { error: 'Bridge URL not set. Open Settings and add your shiva-bridge HTTPS URL.' };
+  try {
+    const r = await fetch(API + path, { ...opts, mode: 'cors' });
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); } catch { j = { error: text || r.statusText }; }
+    if (!r.ok && !j.error) j.error = r.statusText || String(r.status);
+    return j;
+  } catch (e) {
+    return { error: e.message || 'Network error' };
+  }
+}
+
+function applyFallbackCatalog() {
+  const fb = window.SHIVA_FALLBACK;
+  if (!fb) return;
+  if (!chains?.length) chains = fb.chains || [];
+  if (!tokens?.length) tokens = fb.tokens || [];
+}
+
+function saveBridgeUrl() {
+  const input = document.getElementById('bridge-url-input');
+  const v = (input?.value || '').trim().replace(/\/$/, '');
+  if (!v) return;
+  try { localStorage.setItem('SHIVA_BRIDGE_URL', v); } catch (_) {}
+  window.SHIVA_BRIDGE_URL = v;
+  location.reload();
+}
+
+function updateExternalBanner() {
+  const el = document.getElementById('external-banner');
+  if (!el) return;
+  const onPages = /\.github\.io$/i.test(location.hostname);
+  el.classList.toggle('hidden', !!API || !onPages);
 }
 
 function fmtAtomic(n, decimals = 8) {
@@ -97,7 +129,8 @@ function showDiscoverSection(id) {
 }
 
 async function loadTokens() {
-  tokens = await api('/bridge/tokens');
+  const j = await api('/bridge/tokens');
+  if (Array.isArray(j)) tokens = j;
 }
 
 function applyTheme(theme) {
@@ -178,7 +211,14 @@ function setChartPeriod(period) {
   const el = document.getElementById('chart-period-label');
   if (el) el.textContent = labels[period] || 'Change';
   renderPortfolioChart();
+  if (lastPortfolioSymbols.length) hydrateTokenCharts(lastPortfolioSymbols, chartPeriod);
+  if (selectedTokenRow?.sym && document.getElementById('sheet-token')?.classList.contains('open')) {
+    renderTokenDetailChart(selectedTokenRow.sym, chartPeriod);
+  }
 }
+
+let lastPortfolioSymbols = [];
+let selectedTokenRow = null;
 
 function renderPortfolioChart() {
   const svg = document.getElementById('portfolio-chart');
@@ -377,21 +417,31 @@ async function sendAIMessage() {
 
 async function init() {
   loadTheme();
-  chains = await api('/bridge/chains');
+  updateExternalBanner();
+  const bridgeInput = document.getElementById('bridge-url-input');
+  if (bridgeInput && API) bridgeInput.value = API;
+
+  if (API) {
+    const ch = await api('/bridge/chains');
+    if (!ch?.error && Array.isArray(ch)) chains = ch;
+    await loadTokens();
+  }
+  applyFallbackCatalog();
+
   const chainsEl = document.getElementById('chains-list');
-  if (chainsEl) {
+  if (chainsEl && chains?.length) {
     chainsEl.innerHTML = chains.map(c => `
       <div class="asset-row">
         <div class="asset-icon" style="background:${c.color}22;color:${c.color}">${c.symbol[0]}</div>
         <div class="asset-info"><div class="asset-symbol">${c.name}</div><div class="asset-name">${c.type}</div></div>
       </div>`).join('');
   }
-  await loadTokens();
   fillChainSelects();
   [['send-chain','send-token'],['dep-chain','dep-token'],['swap-from-chain','swap-from-token'],['swap-to-chain','swap-to-token'],['bridge-from-chain','bridge-from-token'],['bridge-to-chain','bridge-to-token']].forEach(([c,t]) => {
     const el = document.getElementById(c);
     if (el) onChainChange(el, t);
   });
+  await loadMarketPrices();
   await refreshAll();
   updateSlipDisplay();
   setInterval(() => bridgeStatus(), 20000);
@@ -424,6 +474,7 @@ async function bridgeStatus() {
 
 async function refreshAll() {
   await bridgeStatus();
+  await loadMarketPrices();
   try {
     portfolio = await api('/bridge/portfolio');
     if (portfolio.error) {
@@ -459,53 +510,126 @@ function renderPortfolio() {
     updateHomeBalance([]);
     return;
   }
-  entries.sort((a, b) => Number(BigInt(b[1]) - BigInt(a[1])));
-  grid.innerHTML = entries.map(([key, val]) => {
+  const rows = entries.map(([key, val]) => {
     const [chainId, tokenId] = key.split(':');
     const chain = chains.find(c => c.id === chainId);
     const tok = tokens.find(t => t.chainId === chainId && t.id === tokenId);
     const sym = tok?.symbol || tokenId;
     const dec = tok?.decimals || 8;
-    const amt = fmtAtomic(val, dec);
+    const usd = usdValue(val, dec, sym);
+  return { key, val, chain, tok, sym, dec, amt: fmtAtomic(val, dec), usd };
+  });
+  rows.sort((a, b) => b.usd - a.usd || Number(BigInt(b.val) - BigInt(a.val)));
+  lastPortfolioSymbols = rows.map(r => r.sym);
+  grid.innerHTML = rows.map((row) => {
+    const { chain, sym, amt, usd, chainId } = row;
     const color = chain?.color || '#fff';
-    return `<div class="asset-row">
-      <div class="asset-icon" style="background:${color}22;color:${color}">${sym.slice(0, 2)}</div>
+    const pq = priceForSymbol(sym);
+    const ch = pq.usd24hChange;
+    const chHtml = ch ? `<span class="asset-change ${ch >= 0 ? 'up' : 'down'}">${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%</span>` : '';
+    const priceLine = pq.usd > 0 ? `<span class="asset-price">@ ${fmtUsd(pq.usd)}</span>` : '';
+    return `<div class="asset-row" role="button" tabindex="0" onclick="openTokenDetail(${JSON.stringify(sym)})" onkeydown="if(event.key==='Enter')openTokenDetail(${JSON.stringify(sym)})">
+      ${tokenIconHtml(sym, color)}
       <div class="asset-info">
         <div class="asset-symbol">${sym}</div>
-        <div class="asset-name">${chain?.name || chainId}</div>
+        <div class="asset-name">${chain?.name || chainId} ${chHtml} ${priceLine}</div>
       </div>
+      ${sparklinePlaceholder(sym)}
       <div class="asset-right">
         <div class="asset-amount">${amt}</div>
-        <div class="asset-fiat">${sym}</div>
+        <div class="asset-fiat">${fmtUsd(usd)}</div>
       </div>
     </div>`;
   }).join('');
-  updateHomeBalance(entries);
+  hydrateTokenCharts(lastPortfolioSymbols, chartPeriod);
+  updateHomeBalance(rows);
+}
+
+async function openTokenDetail(sym) {
+  const row = (portfolio?.balances && tokens.length)
+    ? Object.entries(portfolio.balances).find(([k]) => {
+        const [cid, tid] = k.split(':');
+        const t = tokens.find(x => x.chainId === cid && x.id === tid);
+        return (t?.symbol || tid) === sym;
+      })
+    : null;
+  let amt = '0', usd = 0, chainName = '';
+  if (row) {
+    const [key, val] = row;
+    const [chainId, tokenId] = key.split(':');
+    const tok = tokens.find(t => t.chainId === chainId && t.id === tokenId);
+    const dec = tok?.decimals || 8;
+    amt = fmtAtomic(val, dec);
+    usd = usdValue(val, dec, sym);
+    chainName = chains.find(c => c.id === chainId)?.name || chainId;
+  }
+  selectedTokenRow = { sym, amt, usd, chainName };
+  const title = document.getElementById('token-chart-title');
+  const sub = document.getElementById('token-chart-sub');
+  const icon = document.getElementById('token-chart-icon');
+  if (title) title.textContent = sym;
+  if (sub) sub.textContent = `${amt} · ${fmtUsd(usd)} · ${chainName}`;
+  if (icon) {
+    const chain = chains.find(c => c.name === chainName);
+    icon.innerHTML = tokenIconHtml(sym, chain?.color || '#d4af37');
+  }
+  document.querySelectorAll('#token-chart-periods button').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === chartPeriod);
+  });
+  openSheet('token');
+  await renderTokenDetailChart(sym, chartPeriod);
+}
+
+async function renderTokenDetailChart(sym, period) {
+  const svg = document.getElementById('token-detail-chart');
+  const changeEl = document.getElementById('token-chart-change');
+  const priceEl = document.getElementById('token-chart-price');
+  if (!svg) return;
+  const pts = await loadTokenChart(sym, period);
+  const pq = priceForSymbol(sym);
+  if (priceEl) priceEl.textContent = pq.usd > 0 ? fmtUsd(pq.usd) : '—';
+  svg.innerHTML = renderPriceChartSvg(pts, 360, 120, { pad: 6, strokeWidth: 2.2, detail: true, gradId: 'tokenDetailGrad' });
+  if (changeEl && pts.length >= 2) {
+    const v0 = pts[0].v, v1 = pts[pts.length - 1].v;
+    const pct = v0 ? ((v1 - v0) / v0) * 100 : 0;
+    const sign = pct >= 0 ? '+' : '';
+    changeEl.textContent = `${sign}${pct.toFixed(2)}%`;
+    changeEl.className = pct >= 0 ? 'positive' : 'negative';
+  }
+}
+
+function setTokenChartPeriod(period) {
+  document.querySelectorAll('#token-chart-periods button').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === period);
+  });
+  setChartPeriod(period);
 }
 
 function updateHomeBalance(entries) {
-  let total = 0n;
-  let primary = '0';
-  for (const [key, val] of entries) {
-    const v = BigInt(val || 0);
-    total += v;
-    if (key.includes('SHIVA') && !key.includes('sSHIVA') && !key.includes('wSHIVA')) {
-      primary = fmtAtomic(val);
-    }
-  }
-  const display = primary !== '0' ? primary : (entries.length ? fmtAtomic(total.toString()) : '0.00');
+  let totalUsd = 0;
+  const list = Array.isArray(entries) && entries.length && entries[0].usd != null
+    ? entries
+    : (entries || []).map(([key, val]) => {
+        const [chainId, tokenId] = key.split(':');
+        const tok = tokens.find(t => t.chainId === chainId && t.id === tokenId);
+        const sym = tok?.symbol || tokenId;
+        return { usd: usdValue(val, tok?.decimals || 8, sym) };
+      });
+  for (const row of list) totalUsd += row.usd || 0;
+
   const totalEl = document.getElementById('balance-total');
   const subEl = document.getElementById('balance-sub');
+  const display = totalUsd > 0 ? fmtUsd(totalUsd) : (list.length ? '$0.00' : '—');
   if (totalEl) totalEl.textContent = display;
   if (subEl) {
     const hist = filterHistoryByPeriod(getBalanceHistory(), '24h');
     if (hist.length >= 2) {
       const pct = hist[0].v ? ((hist[hist.length - 1].v - hist[0].v) / hist[0].v) * 100 : 0;
       const sign = pct >= 0 ? '+' : '';
-      subEl.textContent = `${sign}${pct.toFixed(2)}% (24h) · ${entries.length} assets`;
+      subEl.textContent = `${sign}${pct.toFixed(2)}% (24h) · ${list.length} assets`;
       subEl.className = 'balance-sub balance-change ' + (pct >= 0 ? 'positive' : 'negative');
     } else {
-      subEl.textContent = entries.length ? `${entries.length} assets` : 'Create or import wallet';
+      subEl.textContent = list.length ? `${list.length} assets · live prices` : 'Create or import wallet';
       subEl.className = 'balance-sub balance-change positive';
     }
   }
