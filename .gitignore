@@ -24,7 +24,9 @@ Thumbs.db
 *.lnk
 .idea/
 .vscode/
+.claude/
 *.swp
+docs/wallet/config.js.bak
 
 # Certs (use deploy/certs/README only)
 deploy/certs/*.pem
