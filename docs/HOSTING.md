@@ -51,6 +51,14 @@ SHIVA_CORS_ORIGINS=https://zaragoza444.github.io,https://your-bridge-host
 
 Push to `main` runs [`.github/workflows/pages.yml`](../.github/workflows/pages.yml).
 
+One command (after [GitHub CLI](https://cli.github.com/) is installed):
+
+```powershell
+.\scripts\push-and-enable-pages.ps1
+# optional bridge URL for swaps on Pages:
+.\scripts\push-and-enable-pages.ps1 -BridgeUrl "https://your-shiva-bridge.onrender.com"
+```
+
 ## Full stack on your domain (alternative)
 
 Use [DEPLOY.md](../DEPLOY.md) with `docker-compose.prod.yml` and set:
