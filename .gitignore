@@ -14,6 +14,7 @@ go-sdk.zip
 .env
 .env.*
 !.env.example
+remotes.env
 configs/faucet-testnet.env
 **/wallets/*.json
 !**/wallets/.gitkeep
