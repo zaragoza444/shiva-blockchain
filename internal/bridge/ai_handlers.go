@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/shiva-blockchain/shiva/internal/ai"
+	"github.com/onex-blockchain/onex/internal/ai"
 )
 
 func (s *Server) registerAIRoutes(mux *http.ServeMux) {

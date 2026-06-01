@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync"
+
+	"github.com/onex-blockchain/onex/internal/legacy"
 )
 
 type ChainInfo struct {
@@ -100,10 +102,12 @@ func (r *Registry) appendToken(t TokenInfo) {
 }
 
 func (r *Registry) TokenKey(chainID, tokenID string) string {
+	chainID, tokenID = legacy.NormalizeToken(chainID, tokenID)
 	return chainID + ":" + tokenID
 }
 
 func (r *Registry) FindToken(chainID, tokenID string) *TokenInfo {
+	chainID, tokenID = legacy.NormalizeToken(chainID, tokenID)
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	for i := range r.Tokens {

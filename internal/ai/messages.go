@@ -6,7 +6,7 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-// Action is an optional UI hint for Shiva Wallet.
+// Action is an optional UI hint for OneX Wallet.
 type Action struct {
 	Type string `json:"type"`
 	Tab  string `json:"tab,omitempty"`

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 type Store struct {

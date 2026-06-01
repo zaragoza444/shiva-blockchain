@@ -1,5 +1,5 @@
 {
-  "chainId": "shiva-mainnet-1",
+  "chainId": "onex-mainnet-1",
   "networkId": 9001,
   "difficulty": 3,
   "blockReward": 5000000000,

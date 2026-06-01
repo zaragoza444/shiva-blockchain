@@ -1,6 +1,6 @@
 [
-  {"id": "shiva-stake", "chainId": "shiva-mainnet-1", "stakeToken": "SHIVA", "receiptToken": "sSHIVA", "apy": 12.5, "lockDays": 0, "minStake": "1"},
-  {"id": "wshiva-stake", "chainId": "shiva-mainnet-1", "stakeToken": "wSHIVA", "receiptToken": "sSHIVA", "apy": 8.0, "lockDays": 7, "minStake": "10"},
+  {"id": "onex-stake", "chainId": "onex-mainnet-1", "stakeToken": "ONEX", "receiptToken": "sONEX", "apy": 12.5, "lockDays": 0, "minStake": "1"},
+  {"id": "wonex-stake", "chainId": "onex-mainnet-1", "stakeToken": "wONEX", "receiptToken": "sONEX", "apy": 8.0, "lockDays": 7, "minStake": "10"},
   {"id": "eth-stake", "chainId": "ethereum", "stakeToken": "ETH", "receiptToken": "sETH", "apy": 4.2, "lockDays": 0, "minStake": "0.01"},
   {"id": "usdt-stake", "chainId": "ethereum", "stakeToken": "USDT", "receiptToken": "sUSDT", "apy": 6.0, "lockDays": 14, "minStake": "10"},
   {"id": "bnb-stake", "chainId": "bsc", "stakeToken": "BNB", "receiptToken": "sBNB", "apy": 5.5, "lockDays": 3, "minStake": "0.1"}

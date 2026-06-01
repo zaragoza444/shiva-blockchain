@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Shiva Wallet",
+  "name": "OneX Wallet",
   "version": "1.0.0",
-  "description": "MetaMask-style wallet for Shiva blockchain (Ed25519)",
+  "description": "MetaMask-style wallet for OneX blockchain (Ed25519)",
   "permissions": ["storage"],
   "host_permissions": ["http://localhost:8545/*", "http://localhost:8547/*", "https://*/*"],
   "action": {
-    "default_title": "Shiva Wallet",
+    "default_title": "OneX Wallet",
     "default_popup": "popup.html"
   },
   "content_scripts": [

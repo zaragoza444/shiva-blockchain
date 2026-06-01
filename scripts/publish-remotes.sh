@@ -10,7 +10,7 @@ BRANCH="${3:-main}"
 if [ ! -d .git ]; then
   git init -b "$BRANCH"
   git add -A
-  git commit -m "Initial commit: Shiva blockchain production stack"
+  git commit -m "Initial commit: OneX blockchain production stack"
 fi
 
 add_remote() {

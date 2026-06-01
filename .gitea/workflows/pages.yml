@@ -15,9 +15,9 @@ jobs:
         run: |
           mkdir -p docs/wallet
           cp -r internal/bridge/static/wallet/* docs/wallet/
-          BRIDGE="${{ vars.SHIVA_BRIDGE_PUBLIC_URL }}"
+          BRIDGE="${{ vars.ONEX_BRIDGE_PUBLIC_URL }}"
           if [ -n "$BRIDGE" ]; then
-            sed -i "s|window.__SHIVA_BRIDGE_DEPLOY__ = .*|window.__SHIVA_BRIDGE_DEPLOY__ = '${BRIDGE}';|" docs/wallet/config.js
+            sed -i "s|window.__ONEX_BRIDGE_DEPLOY__ = .*|window.__ONEX_BRIDGE_DEPLOY__ = '${BRIDGE}';|" docs/wallet/config.js
           fi
 
       - name: Setup Pages

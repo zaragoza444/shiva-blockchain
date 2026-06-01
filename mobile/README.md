@@ -1,13 +1,13 @@
-# Shiva Wallet (mobile)
+# OneX Wallet (mobile)
 
-Expo React Native app that loads the OKX-style Shiva Wallet UI in a WebView.
+Expo React Native app that loads the OKX-style OneX Wallet UI in a WebView.
 
 ## Quick start
 
 ```bash
 # Terminal 1 — node + bridge
 cd ..
-run-shiva-wallet.bat
+run-onex-wallet.bat
 
 # Terminal 2 — mobile
 cd mobile
@@ -28,11 +28,11 @@ Override in-app via **Settings** (gear icon).
 
 ## Deep links
 
-- `shivawallet://swap`
-- `shivawallet://ai`
-- `shivawallet://earn`
-- `shivawallet://discover`
-- `shivawallet://web3`
+- `onexwallet://swap`
+- `onexwallet://ai`
+- `onexwallet://earn`
+- `onexwallet://discover`
+- `onexwallet://web3`
 
 ## Store builds
 

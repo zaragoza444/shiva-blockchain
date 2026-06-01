@@ -1,21 +1,21 @@
 # Production stack: node + wallet bridge + optional TLS proxy
 # Usage:
-#   cp .env.example .env   # set SHIVA_API_KEY, SHIVA_CORS_ORIGINS, etc.
+#   cp .env.example .env   # set ONEX_API_KEY, ONEX_CORS_ORIGINS, etc.
 #   docker compose -f docker-compose.prod.yml up -d
 #   docker compose -f docker-compose.prod.yml --profile proxy up -d
 
 services:
-  shivad:
+  onexd:
     build: .
-    image: shiva-blockchain:latest
+    image: onex-blockchain:latest
     ports:
       - "8545:8545"
       - "30303:30303"
     volumes:
-      - shiva-data:/data
+      - onex-data:/data
     environment:
-      SHIVA_CORS_ORIGINS: ${SHIVA_CORS_ORIGINS:-*}
-      SHIVA_API_KEY: ${SHIVA_API_KEY:-}
+      ONEX_CORS_ORIGINS: ${ONEX_CORS_ORIGINS:-*}
+      ONEX_API_KEY: ${ONEX_API_KEY:-}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8545/health"]
@@ -24,13 +24,13 @@ services:
       retries: 3
       start_period: 20s
 
-  shiva-bridge:
+  onex-bridge:
     build: .
-    image: shiva-blockchain:latest
-    entrypoint: ["/usr/local/bin/shiva-bridge"]
+    image: onex-blockchain:latest
+    entrypoint: ["/usr/local/bin/onex-bridge"]
     command:
       - "-node"
-      - "http://shivad:8545"
+      - "http://onexd:8545"
       - "-listen"
       - ":9338"
       - "-config"
@@ -42,10 +42,10 @@ services:
     volumes:
       - bridge-data:/bridge-data
     environment:
-      SHIVA_NODE_URL: http://shivad:8545
-      SHIVA_PROJECT_ROOT: /app
+      ONEX_NODE_URL: http://onexd:8545
+      ONEX_PROJECT_ROOT: /app
     depends_on:
-      shivad:
+      onexd:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -65,13 +65,13 @@ services:
       - ./deploy/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - ./deploy/certs:/etc/nginx/certs:ro
     depends_on:
-      - shivad
-      - shiva-bridge
+      - onexd
+      - onex-bridge
     restart: unless-stopped
 
-  shivad-testnet:
+  onexd-testnet:
     build: .
-    image: shiva-blockchain:latest
+    image: onex-blockchain:latest
     profiles: ["testnet"]
     ports:
       - "8547:8547"
@@ -88,12 +88,12 @@ services:
       - "-mine"
       - "-faucet"
     volumes:
-      - shiva-testnet:/data
+      - onex-testnet:/data
     environment:
-      SHIVA_FAUCET_PRIVATE_KEY: ${SHIVA_FAUCET_PRIVATE_KEY:-}
+      ONEX_FAUCET_PRIVATE_KEY: ${ONEX_FAUCET_PRIVATE_KEY:-}
     restart: unless-stopped
 
 volumes:
-  shiva-data:
+  onex-data:
   bridge-data:
-  shiva-testnet:
+  onex-testnet:

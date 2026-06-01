@@ -13,7 +13,7 @@ Set-Location $root
 if (-not (Test-Path .git)) {
     git init -b $Branch
     git add -A
-    git commit -m "Initial commit: Shiva blockchain production stack"
+    git commit -m "Initial commit: OneX blockchain production stack"
 }
 
 function Set-Remote($name, $url) {

@@ -1,8 +1,8 @@
 // Injected into the WebView so the wallet can call native share/clipboard.
 export const INJECTED_BRIDGE_JS = `
 (function() {
-  if (window.ShivaMobile) return;
-  window.ShivaMobile = {
+  if (window.OneXMobile) return;
+  window.OneXMobile = {
     isApp: true,
     post: function(msg) {
       if (window.ReactNativeWebView) {
@@ -16,7 +16,7 @@ export const INJECTED_BRIDGE_JS = `
       this.post({ type: 'share', text: String(text || '') });
     }
   };
-  document.documentElement.classList.add('shiva-mobile');
+  document.documentElement.classList.add('onex-mobile');
 })();
 true;
 `;

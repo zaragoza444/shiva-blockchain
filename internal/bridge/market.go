@@ -41,10 +41,10 @@ var cgIDBySymbol = map[string]string{
 
 // synthetic USD when not listed on CoinGecko (derived from configs/swap-pairs.json pegs).
 var syntheticUSD = map[string]float64{
-	"SHIVA":  0.01,
-	"tSHIVA": 0.01,
-	"wSHIVA": 0.01,
-	"sSHIVA": 0.0095,
+	"ONEX":  0.01,
+	"tONEX": 0.01,
+	"wONEX": 0.01,
+	"sONEX": 0.0095,
 	"sETH":   0, // filled from ETH
 	"sUSDT":  0,
 	"sBNB":   0,
@@ -240,8 +240,8 @@ func chartParentSymbol(sym string) string {
 		return "USDT"
 	case "sBNB":
 		return "BNB"
-	case "tSHIVA", "wSHIVA", "sSHIVA":
-		return "SHIVA"
+	case "tONEX", "wONEX", "sONEX":
+		return "ONEX"
 	}
 	return ""
 }

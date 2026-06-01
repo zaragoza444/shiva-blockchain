@@ -1,7 +1,7 @@
 # Production publish: sync wallet → GitHub (+ Pages) → Gitea (+ Pages).
 param(
     [string]$GitHubUser = "zaragoza444",
-    [string]$RepoName = "shiva-blockchain",
+    [string]$RepoName = "onex-blockchain",
     [string]$GiteaUrl = "",
     [string]$BridgeUrl = ""
 )
@@ -22,11 +22,11 @@ function Read-RemotesEnv {
     return ""
 }
 
-Write-Host "=== Shiva production publish ===" -ForegroundColor Cyan
+Write-Host "=== OneX production publish ===" -ForegroundColor Cyan
 
 # Load remotes.env defaults
 if (-not $GiteaUrl) { $GiteaUrl = Read-RemotesEnv "GITEA_URL" }
-if (-not $BridgeUrl) { $BridgeUrl = Read-RemotesEnv "SHIVA_BRIDGE_PUBLIC_URL" }
+if (-not $BridgeUrl) { $BridgeUrl = Read-RemotesEnv "ONEX_BRIDGE_PUBLIC_URL" }
 $envUser = Read-RemotesEnv "GITHUB_USER"
 if ($envUser) { $GitHubUser = $envUser }
 $envRepo = Read-RemotesEnv "REPO_NAME"
@@ -41,7 +41,7 @@ if ($BridgeUrl) {
 }
 
 Write-Host "Building binaries (smoke test) ..."
-go build -o "$root\bin\shiva-bridge.exe" "$root\cmd\shiva-bridge"
+go build -o "$root\bin\onex-bridge.exe" "$root\cmd\onex-bridge"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $dirty = git status --porcelain
@@ -87,7 +87,7 @@ Write-Host ""
 Write-Host "=== Production URLs ===" -ForegroundColor Green
 Write-Host "GitHub wallet:  https://${GitHubUser}.github.io/${RepoName}/wallet/"
 Write-Host "GitHub repo:    https://github.com/${GitHubUser}/${RepoName}"
-Write-Host "Render bridge:  deploy render.yaml -> set SHIVA_BRIDGE_PUBLIC_URL"
+Write-Host "Render bridge:  deploy render.yaml -> set ONEX_BRIDGE_PUBLIC_URL"
 if ($BridgeUrl) {
     Write-Host "Bridge:         $BridgeUrl"
     Write-Host "Connected:      https://${GitHubUser}.github.io/${RepoName}/wallet/?bridge=$BridgeUrl"

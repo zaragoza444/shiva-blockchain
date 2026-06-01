@@ -30,13 +30,14 @@ func (s *Server) registerDeFiRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/bridge/unstake", s.handleUnstake)
 	mux.HandleFunc("/bridge/tokens/create", s.handleTokenCreate)
 	mux.HandleFunc("/bridge/tokens/custom", s.handleTokensCustom)
-	mux.HandleFunc("/bridge/shiva-swap/pools", s.handleShivaSwapPools)
-	mux.HandleFunc("/bridge/shiva-swap/quote", s.handleShivaSwapQuote)
-	mux.HandleFunc("/bridge/shiva-swap/swap", s.handleShivaSwapExec)
-	mux.HandleFunc("/bridge/shiva-swap/liquidity/add", s.handleShivaSwapAddLiq)
-	mux.HandleFunc("/bridge/shiva-swap/liquidity/remove", s.handleShivaSwapRemoveLiq)
-	mux.HandleFunc("/bridge/shiva-swap/bridge/quote", s.handleBridgeQuote)
-	mux.HandleFunc("/bridge/shiva-swap/bridge", s.handleBridgeExec)
+	mux.HandleFunc("/bridge/onex-swap/pools", s.handleOneXSwapPools)
+	mux.HandleFunc("/bridge/onex-swap/quote", s.handleOneXSwapQuote)
+	mux.HandleFunc("/bridge/onex-swap/swap", s.handleOneXSwapExec)
+	mux.HandleFunc("/bridge/onex-swap/liquidity/add", s.handleOneXSwapAddLiq)
+	mux.HandleFunc("/bridge/onex-swap/liquidity/remove", s.handleOneXSwapRemoveLiq)
+	mux.HandleFunc("/bridge/onex-swap/bridge/quote", s.handleBridgeQuote)
+	mux.HandleFunc("/bridge/onex-swap/bridge", s.handleBridgeExec)
+	registerLegacySwapRoutes(mux, s)
 	mux.HandleFunc("/swap", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/wallet/#swap", http.StatusFound)
 	})
@@ -145,7 +146,7 @@ func (s *Server) handleTokenCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.ChainID == "" {
-		req.ChainID = "shiva-mainnet-1"
+		req.ChainID = "onex-mainnet-1"
 	}
 	if req.Decimals == 0 {
 		req.Decimals = 8
@@ -158,13 +159,13 @@ func (s *Server) handleTokenCreate(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, tok)
 }
 
-func (s *Server) handleShivaSwapPools(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, s.b.ShivaSwapPools())
+func (s *Server) handleOneXSwapPools(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, s.b.OneXSwapPools())
 }
 
-func (s *Server) handleShivaSwapQuote(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleOneXSwapQuote(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	quote, err := s.b.ShivaSwapQuote(q.Get("tokenIn"), q.Get("tokenOut"), q.Get("amount"))
+	quote, err := s.b.OneXSwapQuote(q.Get("tokenIn"), q.Get("tokenOut"), q.Get("amount"))
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
@@ -172,7 +173,7 @@ func (s *Server) handleShivaSwapQuote(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, quote)
 }
 
-func (s *Server) handleShivaSwapExec(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleOneXSwapExec(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "POST only", 405)
 		return
@@ -190,7 +191,7 @@ func (s *Server) handleShivaSwapExec(w http.ResponseWriter, r *http.Request) {
 	if req.SlippageBps == 0 {
 		req.SlippageBps = 50
 	}
-	res, err := s.b.ShivaSwapExecute(req.TokenIn, req.TokenOut, req.Amount, req.SlippageBps)
+	res, err := s.b.OneXSwapExecute(req.TokenIn, req.TokenOut, req.Amount, req.SlippageBps)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
@@ -198,7 +199,7 @@ func (s *Server) handleShivaSwapExec(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, res)
 }
 
-func (s *Server) handleShivaSwapAddLiq(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleOneXSwapAddLiq(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "POST only", 405)
 		return
@@ -213,7 +214,7 @@ func (s *Server) handleShivaSwapAddLiq(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	res, err := s.b.ShivaSwapAddLiquidity(req.Token0, req.Token1, req.Amount0, req.Amount1)
+	res, err := s.b.OneXSwapAddLiquidity(req.Token0, req.Token1, req.Amount0, req.Amount1)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
@@ -221,7 +222,7 @@ func (s *Server) handleShivaSwapAddLiq(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, res)
 }
 
-func (s *Server) handleShivaSwapRemoveLiq(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleOneXSwapRemoveLiq(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "POST only", 405)
 		return
@@ -234,7 +235,7 @@ func (s *Server) handleShivaSwapRemoveLiq(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	res, err := s.b.ShivaSwapRemoveLiquidity(req.PoolID, req.Shares)
+	res, err := s.b.OneXSwapRemoveLiquidity(req.PoolID, req.Shares)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
@@ -389,7 +390,7 @@ func (s *Server) handleNFTMint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.ChainID == "" {
-		req.ChainID = "shiva-mainnet-1"
+		req.ChainID = "onex-mainnet-1"
 	}
 	nft, err := s.b.MintNFT(req.Name, req.Description, req.ImageURL, req.ChainID)
 	if err != nil {
@@ -525,4 +526,20 @@ func (s *Server) handleSendToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, res)
+}
+
+// registerLegacySwapRoutes keeps old Shiva Swap API paths working after the OneX rename.
+func registerLegacySwapRoutes(mux *http.ServeMux, s *Server) {
+	legacyRoutes := map[string]http.HandlerFunc{
+		"/bridge/shiva-swap/pools":          s.handleOneXSwapPools,
+		"/bridge/shiva-swap/quote":          s.handleOneXSwapQuote,
+		"/bridge/shiva-swap/swap":           s.handleOneXSwapExec,
+		"/bridge/shiva-swap/liquidity/add":  s.handleOneXSwapAddLiq,
+		"/bridge/shiva-swap/liquidity/remove": s.handleOneXSwapRemoveLiq,
+		"/bridge/shiva-swap/bridge/quote":   s.handleBridgeQuote,
+		"/bridge/shiva-swap/bridge":         s.handleBridgeExec,
+	}
+	for path, h := range legacyRoutes {
+		mux.HandleFunc(path, h)
+	}
 }

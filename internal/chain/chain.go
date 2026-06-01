@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/shiva-blockchain/shiva/internal/consensus"
-	"github.com/shiva-blockchain/shiva/internal/crypto"
-	"github.com/shiva-blockchain/shiva/internal/storage"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/consensus"
+	"github.com/onex-blockchain/onex/internal/crypto"
+	"github.com/onex-blockchain/onex/internal/storage"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 type Blockchain struct {

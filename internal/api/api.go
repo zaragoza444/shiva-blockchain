@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/shiva-blockchain/shiva/internal/chain"
-	"github.com/shiva-blockchain/shiva/internal/faucet"
-	"github.com/shiva-blockchain/shiva/internal/mempool"
-	"github.com/shiva-blockchain/shiva/internal/network"
-	"github.com/shiva-blockchain/shiva/internal/rpc"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/chain"
+	"github.com/onex-blockchain/onex/internal/faucet"
+	"github.com/onex-blockchain/onex/internal/mempool"
+	"github.com/onex-blockchain/onex/internal/network"
+	"github.com/onex-blockchain/onex/internal/rpc"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 //go:embed static/explorer/*
@@ -99,20 +99,20 @@ func (s *Server) handleChainMeta(w http.ResponseWriter, r *http.Request) {
 		"chainId":   s.bc.ChainID(),
 		"networkId": s.bc.NetworkID(),
 		"decimals":  types.CoinDecimals,
-		"symbol":    "SHIVA",
+		"symbol":    "ONEX",
 		"rpcMethods": []string{
-			"shiva_chainId", "shiva_getBalance", "shiva_getTransactionCount",
-			"shiva_sendTransaction", "eth_chainId", "eth_getBalance",
+			"onex_chainId", "onex_getBalance", "onex_getTransactionCount",
+			"onex_sendTransaction", "eth_chainId", "eth_getBalance",
 		},
 		"wallet": map[string]interface{}{
 			"type":        "ed25519",
 			"addressLen":  64,
 			"metaMask":    false,
-			"useShivaWallet": true,
+			"useOneXWallet": true,
 			"addChain": map[string]interface{}{
 				"chainId":             fmtHexChainID(s.bc.NetworkID()),
 				"chainName":           s.bc.ChainID(),
-				"nativeCurrency":      map[string]string{"name": "Shiva", "symbol": "SHIVA", "decimals": "8"},
+				"nativeCurrency":      map[string]string{"name": "OneX", "symbol": "ONEX", "decimals": "8"},
 				"rpcUrls":             []string{"/rpc"},
 				"blockExplorerUrls":   []string{"/explorer/"},
 			},

@@ -1,6 +1,6 @@
 [
-  {"id": "shiva-mainnet-1", "name": "Shiva", "networkId": 9001, "symbol": "SHIVA", "native": true, "rpc": "http://127.0.0.1:8545", "explorer": "/explorer/", "color": "#00e5b0", "type": "shiva"},
-  {"id": "shiva-testnet-1", "name": "Shiva Testnet", "networkId": 9002, "symbol": "SHIVA", "native": true, "rpc": "http://127.0.0.1:8547", "explorer": "http://127.0.0.1:8547/explorer/", "color": "#7c5cff", "type": "shiva"},
+  {"id": "onex-mainnet-1", "name": "OneX", "networkId": 9001, "symbol": "ONEX", "native": true, "rpc": "http://127.0.0.1:8545", "explorer": "/explorer/", "color": "#00e5b0", "type": "onex"},
+  {"id": "onex-testnet-1", "name": "OneX Testnet", "networkId": 9002, "symbol": "ONEX", "native": true, "rpc": "http://127.0.0.1:8547", "explorer": "http://127.0.0.1:8547/explorer/", "color": "#7c5cff", "type": "onex"},
   {"id": "ethereum", "name": "Ethereum", "networkId": 1, "symbol": "ETH", "native": false, "rpc": "https://eth.llamarpc.com", "explorer": "https://etherscan.io", "color": "#627eea", "type": "evm"},
   {"id": "bsc", "name": "BNB Chain", "networkId": 56, "symbol": "BNB", "native": false, "rpc": "https://bsc-dataseed.binance.org", "explorer": "https://bscscan.com", "color": "#f3ba2f", "type": "evm"},
   {"id": "polygon", "name": "Polygon", "networkId": 137, "symbol": "MATIC", "native": false, "rpc": "https://polygon-rpc.com", "explorer": "https://polygonscan.com", "color": "#8247e5", "type": "evm"},

@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Shiva Wallet",
-    "slug": "shiva-wallet",
+    "name": "OneX Wallet",
+    "slug": "onex-wallet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "shivawallet",
+    "scheme": "onexwallet",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.shiva.wallet",
+      "bundleIdentifier": "com.onex.wallet",
       "buildNumber": "1",
       "infoPlist": {
         "NSAppTransportSecurity": {
@@ -27,7 +27,7 @@
       }
     },
     "android": {
-      "package": "com.shiva.wallet",
+      "package": "com.onex.wallet",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#000000",
@@ -39,7 +39,7 @@
         {
           "action": "VIEW",
           "autoVerify": false,
-          "data": [{ "scheme": "shivawallet" }],
+          "data": [{ "scheme": "onexwallet" }],
           "category": ["BROWSABLE", "DEFAULT"]
         }
       ]

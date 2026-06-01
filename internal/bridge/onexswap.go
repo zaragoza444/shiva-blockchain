@@ -2,27 +2,26 @@ package bridge
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
-	"github.com/shiva-blockchain/shiva/internal/bridge/amm"
-	"github.com/shiva-blockchain/shiva/internal/rpc"
+	"github.com/onex-blockchain/onex/internal/bridge/amm"
+	"github.com/onex-blockchain/onex/internal/legacy"
+	"github.com/onex-blockchain/onex/internal/rpc"
 )
 
 func (b *Bridge) ammStore() *amm.Store {
 	if b.amm == nil {
-		home, _ := os.UserHomeDir()
-		b.amm = amm.NewStore(filepath.Join(home, ".shiva", "amm"))
+		b.amm = amm.NewStore(filepath.Join(legacy.HomeDir(), "amm"))
 		seed := loadJSON[amm.Pool](filepath.Join(b.projectRoot(), "configs", "amm-pools.json"))
 		_ = b.amm.Load(seed)
 	}
 	return b.amm
 }
 
-func (b *Bridge) ShivaSwapPools() []amm.Pool {
+func (b *Bridge) OneXSwapPools() []amm.Pool {
 	return b.ammStore().List()
 }
 
-func (b *Bridge) ShivaSwapQuote(tokenIn, tokenOut, amountStr string) (map[string]interface{}, error) {
+func (b *Bridge) OneXSwapQuote(tokenIn, tokenOut, amountStr string) (map[string]interface{}, error) {
 	amt, err := rpc.ParseAmount(amountStr)
 	if err != nil {
 		return nil, err
@@ -48,12 +47,12 @@ func (b *Bridge) ShivaSwapQuote(tokenIn, tokenOut, amountStr string) (map[string
 	}, nil
 }
 
-// ShivaSwapExecute performs AMM swap and updates user portfolio + on-chain SHIVA when needed.
-func (b *Bridge) ShivaSwapExecute(tokenIn, tokenOut, amountStr string, slippageBps int) (map[string]interface{}, error) {
+// OneXSwapExecute performs AMM swap and updates user portfolio + on-chain ONEX when needed.
+func (b *Bridge) OneXSwapExecute(tokenIn, tokenOut, amountStr string, slippageBps int) (map[string]interface{}, error) {
 	if err := b.EnsureWallet(); err != nil {
 		return nil, err
 	}
-	quote, err := b.ShivaSwapQuote(tokenIn, tokenOut, amountStr)
+	quote, err := b.OneXSwapQuote(tokenIn, tokenOut, amountStr)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +86,7 @@ func (b *Bridge) ShivaSwapExecute(tokenIn, tokenOut, amountStr string, slippageB
 	_ = b.portfolio().Save(p)
 	_ = b.ammStore().Update(pool)
 
-	// Sync SHIVA to chain when swapping native SHIVA (bridge ↔ blockchain)
+	// Sync ONEX to chain when swapping native ONEX (bridge ↔ blockchain)
 	b.syncSwapToChain(tokenIn, tokenOut, amountIn, out)
 
 	rec := SwapRecord{
@@ -105,22 +104,22 @@ func (b *Bridge) ShivaSwapExecute(tokenIn, tokenOut, amountStr string, slippageB
 		"amountOut":   out,
 		"poolId":      pool.ID,
 		"priceImpact": quote["priceImpact"],
-		"txType":      "shiva-swap-amm",
+		"txType":      "onex-swap-amm",
 	}, nil
 }
 
 func (b *Bridge) syncSwapToChain(tokenIn, tokenOut string, amountIn, amountOut uint64) {
-	shivaKey := b.registry().TokenKey("shiva-mainnet-1", "SHIVA")
-	if tokenIn != shivaKey && tokenOut != shivaKey {
+	onexKey := b.registry().TokenKey("onex-mainnet-1", "ONEX")
+	if tokenIn != onexKey && tokenOut != onexKey {
 		return
 	}
-	// Portfolio already updated; on-chain SHIVA balance is source of truth on refresh.
-	// Swaps selling SHIVA will reflect after syncShivaBalance on next GetPortfolio.
+	// Portfolio already updated; on-chain ONEX balance is source of truth on refresh.
+	// Swaps selling ONEX will reflect after syncOneXBalance on next GetPortfolio.
 	_ = amountIn
 	_ = amountOut
 }
 
-func (b *Bridge) ShivaSwapAddLiquidity(token0, token1, amount0Str, amount1Str string) (map[string]interface{}, error) {
+func (b *Bridge) OneXSwapAddLiquidity(token0, token1, amount0Str, amount1Str string) (map[string]interface{}, error) {
 	if err := b.EnsureWallet(); err != nil {
 		return nil, err
 	}
@@ -168,7 +167,7 @@ func (b *Bridge) ShivaSwapAddLiquidity(token0, token1, amount0Str, amount1Str st
 	}, nil
 }
 
-func (b *Bridge) ShivaSwapRemoveLiquidity(poolID, sharesStr string) (map[string]interface{}, error) {
+func (b *Bridge) OneXSwapRemoveLiquidity(poolID, sharesStr string) (map[string]interface{}, error) {
 	if err := b.EnsureWallet(); err != nil {
 		return nil, err
 	}
@@ -199,25 +198,25 @@ func (b *Bridge) ShivaSwapRemoveLiquidity(poolID, sharesStr string) (map[string]
 	}, nil
 }
 
-// BridgeRoute finds path tokenIn -> SHIVA -> tokenOut across two pools.
+// BridgeRoute finds path tokenIn -> ONEX -> tokenOut across two pools.
 func (b *Bridge) BridgeRoute(tokenIn, tokenOut, amountStr string) (map[string]interface{}, error) {
-	shiva := b.registry().TokenKey("shiva-mainnet-1", "SHIVA")
+	onex := b.registry().TokenKey("onex-mainnet-1", "ONEX")
 	if tokenIn == tokenOut {
 		return nil, fmt.Errorf("same token")
 	}
-	if tokenIn == shiva || tokenOut == shiva {
-		return b.ShivaSwapQuote(tokenIn, tokenOut, amountStr)
+	if tokenIn == onex || tokenOut == onex {
+		return b.OneXSwapQuote(tokenIn, tokenOut, amountStr)
 	}
-	q1, err := b.ShivaSwapQuote(tokenIn, shiva, amountStr)
+	q1, err := b.OneXSwapQuote(tokenIn, onex, amountStr)
 	if err != nil {
 		return nil, fmt.Errorf("bridge leg1: %w", err)
 	}
-	q2, err := b.ShivaSwapQuote(shiva, tokenOut, q1["amountOut"].(string))
+	q2, err := b.OneXSwapQuote(onex, tokenOut, q1["amountOut"].(string))
 	if err != nil {
 		return nil, fmt.Errorf("bridge leg2: %w", err)
 	}
 	return map[string]interface{}{
-		"route":     []string{tokenIn, shiva, tokenOut},
+		"route":     []string{tokenIn, onex, tokenOut},
 		"amountIn":  q1["amountIn"],
 		"amountOut": q2["amountOut"],
 		"leg1":      q1,
@@ -226,18 +225,18 @@ func (b *Bridge) BridgeRoute(tokenIn, tokenOut, amountStr string) (map[string]in
 }
 
 func (b *Bridge) BridgeExecute(tokenIn, tokenOut, amountStr string, slippageBps int) (map[string]interface{}, error) {
-	shiva := b.registry().TokenKey("shiva-mainnet-1", "SHIVA")
-	if tokenIn == shiva || tokenOut == shiva {
-		return b.ShivaSwapExecute(tokenIn, tokenOut, amountStr, slippageBps)
+	onex := b.registry().TokenKey("onex-mainnet-1", "ONEX")
+	if tokenIn == onex || tokenOut == onex {
+		return b.OneXSwapExecute(tokenIn, tokenOut, amountStr, slippageBps)
 	}
-	q1, err := b.ShivaSwapQuote(tokenIn, shiva, amountStr)
+	q1, err := b.OneXSwapQuote(tokenIn, onex, amountStr)
 	if err != nil {
 		return nil, err
 	}
-	_, err = b.ShivaSwapExecute(tokenIn, shiva, amountStr, slippageBps)
+	_, err = b.OneXSwapExecute(tokenIn, onex, amountStr, slippageBps)
 	if err != nil {
 		return nil, err
 	}
-	return b.ShivaSwapExecute(shiva, tokenOut, q1["amountOut"].(string), slippageBps)
+	return b.OneXSwapExecute(onex, tokenOut, q1["amountOut"].(string), slippageBps)
 }
 

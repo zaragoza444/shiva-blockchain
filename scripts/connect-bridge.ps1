@@ -1,10 +1,10 @@
-# Connect hosted wallet UI to your public shiva-bridge URL.
+# Connect hosted wallet UI to your public onex-bridge URL.
 param(
     [Parameter(Mandatory = $true)]
     [string]$BridgeUrl,
     [switch]$GitHubVariable,
     [string]$GitHubUser = "zaragoza444",
-    [string]$RepoName = "shiva-blockchain"
+    [string]$RepoName = "onex-blockchain"
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,7 +15,7 @@ $url = $BridgeUrl.Trim().TrimEnd('/')
 
 $internalCfg = Join-Path $root "internal\bridge\static\wallet\config.js"
 $internal = Get-Content $internalCfg -Raw
-if ($internal -notmatch "SHIVA_BRIDGE_URL = '$url'") {
+if ($internal -notmatch "ONEX_BRIDGE_URL = '$url'") {
     Write-Host "Note: internal wallet uses auto-detect on localhost; Pages uses docs/wallet/config.js"
 }
 
@@ -27,8 +27,8 @@ if ($GitHubVariable) {
         Write-Host "Run: gh auth login"
         exit 1
     }
-    & $gh variable set SHIVA_BRIDGE_PUBLIC_URL --body $url --repo "${GitHubUser}/${RepoName}"
-    Write-Host "Set GitHub Actions variable SHIVA_BRIDGE_PUBLIC_URL"
+    & $gh variable set ONEX_BRIDGE_PUBLIC_URL --body $url --repo "${GitHubUser}/${RepoName}"
+    Write-Host "Set GitHub Actions variable ONEX_BRIDGE_PUBLIC_URL"
     & $gh workflow run "GitHub Pages" --repo "${GitHubUser}/${RepoName}" 2>&1 | Out-Null
 }
 

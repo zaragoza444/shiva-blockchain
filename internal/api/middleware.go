@@ -32,7 +32,7 @@ func (m *middleware) wrap(next http.Handler) http.Handler {
 			return
 		}
 		if m.apiKey != "" && needsAPIKey(r) {
-			if r.Header.Get("X-Shiva-Api-Key") != m.apiKey && r.Header.Get("Authorization") != "Bearer "+m.apiKey {
+			if r.Header.Get("X-OneX-Api-Key") != m.apiKey && r.Header.Get("Authorization") != "Bearer "+m.apiKey {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
@@ -56,7 +56,7 @@ func (m *middleware) handleCORS(w http.ResponseWriter, r *http.Request) bool {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Vary", "Origin")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Shiva-Api-Key")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-OneX-Api-Key")
 		w.Header().Set("Access-Control-Max-Age", "86400")
 	}
 	if r.Method == http.MethodOptions {

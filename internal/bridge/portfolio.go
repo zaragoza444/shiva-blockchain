@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/onex-blockchain/onex/internal/legacy"
 )
 
 type Portfolio struct {
@@ -106,6 +108,11 @@ func (ps *PortfolioStore) Load(addr string) (*Portfolio, error) {
 	if err := json.Unmarshal(data, &p); err != nil {
 		return nil, err
 	}
+	if legacy.MigrateBalanceKeys(p.Balances) {
+		if data, err := json.MarshalIndent(p, "", "  "); err == nil {
+			_ = os.WriteFile(ps.path(addr), data, 0o600)
+		}
+	}
 	ps.data[addr] = &p
 	return p.clone(), nil
 }
@@ -129,7 +136,7 @@ func defaultPortfolio(addr string) *Portfolio {
 			"ethereum:ETH":   "100000000",
 			"bsc:BNB":        "2000000000",
 			"polygon:USDC-POLY": "3000000000",
-			"shiva-mainnet-1:wSHIVA": "10000000000",
+			"onex-mainnet-1:wONEX": "10000000000",
 		},
 		Tasks: defaultTasks(),
 	}
@@ -137,12 +144,12 @@ func defaultPortfolio(addr string) *Portfolio {
 
 func defaultTasks() []TaskItem {
 	return []TaskItem{
-		{ID: "welcome", Title: "Welcome to Shiva", Description: "Complete your profile in the wallet", RewardKey: "shiva-mainnet-1:SHIVA", RewardAmt: "1000000000", Status: "open"},
-		{ID: "first-swap", Title: "First swap", Description: "Swap any token to SHIVA", RewardKey: "shiva-mainnet-1:SHIVA", RewardAmt: "500000000", Status: "open"},
-		{ID: "mint-nft", Title: "Mint an NFT", Description: "Create your first Shiva NFT", RewardKey: "shiva-mainnet-1:wSHIVA", RewardAmt: "100000000", Status: "open"},
-		{ID: "deposit", Title: "Bridge deposit", Description: "Record a cross-chain deposit", RewardKey: "shiva-mainnet-1:SHIVA", RewardAmt: "250000000", Status: "open"},
-		{ID: "first-stake", Title: "Stake tokens", Description: "Stake SHIVA or any supported token", RewardKey: "shiva-mainnet-1:sSHIVA", RewardAmt: "200000000", Status: "open"},
-		{ID: "create-token", Title: "Create a token", Description: "Launch your own token on Shiva", RewardKey: "shiva-mainnet-1:SHIVA", RewardAmt: "1000000000", Status: "open"},
+		{ID: "welcome", Title: "Welcome to OneX", Description: "Complete your profile in the wallet", RewardKey: "onex-mainnet-1:ONEX", RewardAmt: "1000000000", Status: "open"},
+		{ID: "first-swap", Title: "First swap", Description: "Swap any token to ONEX", RewardKey: "onex-mainnet-1:ONEX", RewardAmt: "500000000", Status: "open"},
+		{ID: "mint-nft", Title: "Mint an NFT", Description: "Create your first OneX NFT", RewardKey: "onex-mainnet-1:wONEX", RewardAmt: "100000000", Status: "open"},
+		{ID: "deposit", Title: "Bridge deposit", Description: "Record a cross-chain deposit", RewardKey: "onex-mainnet-1:ONEX", RewardAmt: "250000000", Status: "open"},
+		{ID: "first-stake", Title: "Stake tokens", Description: "Stake ONEX or any supported token", RewardKey: "onex-mainnet-1:sONEX", RewardAmt: "200000000", Status: "open"},
+		{ID: "create-token", Title: "Create a token", Description: "Launch your own token on OneX", RewardKey: "onex-mainnet-1:ONEX", RewardAmt: "1000000000", Status: "open"},
 	}
 }
 

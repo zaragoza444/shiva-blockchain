@@ -15,10 +15,10 @@ jobs:
         with:
           go-version: "1.22"
       - run: go test ./internal/...
-      - run: go build -o bin/shivad ./cmd/shivad
-      - run: go build -o bin/shiva ./cmd/shiva
-      - run: go build -o bin/shiva-bridge ./cmd/shiva-bridge
-      - run: go build -o bin/shiva-ai ./cmd/shiva-ai
+      - run: go build -o bin/onexd ./cmd/onexd
+      - run: go build -o bin/onex ./cmd/onex
+      - run: go build -o bin/onex-bridge ./cmd/onex-bridge
+      - run: go build -o bin/onex-ai ./cmd/onex-ai
       - run: go test ./internal/ai/...
 
   docker:
@@ -26,4 +26,4 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t shiva-blockchain:ci .
+      - run: docker build -t onex-blockchain:ci .

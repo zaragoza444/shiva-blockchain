@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/shiva-blockchain/shiva/internal/bridge/amm"
-	"github.com/shiva-blockchain/shiva/internal/types"
-	"github.com/shiva-blockchain/shiva/internal/wallet"
+	"github.com/onex-blockchain/onex/internal/bridge/amm"
+	"github.com/onex-blockchain/onex/internal/types"
+	"github.com/onex-blockchain/onex/internal/wallet"
 )
 
 type Bridge struct {
@@ -131,18 +131,18 @@ func (b *Bridge) Send(to types.Address, amount, fee uint64) (map[string]string, 
 
 func (b *Bridge) HandleWalletRPC(method string, params json.RawMessage) (interface{}, error) {
 	switch method {
-	case "shiva_requestAccounts", "eth_requestAccounts":
+	case "onex_requestAccounts", "eth_requestAccounts":
 		if err := b.EnsureWallet(); err != nil {
 			return nil, err
 		}
 		return []string{b.WalletAddress()}, nil
-	case "shiva_accounts", "eth_accounts":
+	case "onex_accounts", "eth_accounts":
 		addr := b.WalletAddress()
 		if addr == "" {
 			return []string{}, nil
 		}
 		return []string{addr}, nil
-	case "shiva_getBalance", "eth_getBalance":
+	case "onex_getBalance", "eth_getBalance":
 		var args []string
 		if err := json.Unmarshal(params, &args); err != nil || len(args) < 1 {
 			return nil, fmt.Errorf("address required")
@@ -156,7 +156,7 @@ func (b *Bridge) HandleWalletRPC(method string, params json.RawMessage) (interfa
 			return fmt.Sprintf("0x%x", bal), nil
 		}
 		return map[string]interface{}{"balance": bal, "nonce": nonce}, nil
-	case "shiva_sendTransaction":
+	case "onex_sendTransaction":
 		if err := b.EnsureWallet(); err != nil {
 			return nil, err
 		}

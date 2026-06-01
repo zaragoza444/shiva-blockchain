@@ -1,44 +1,44 @@
 [
   {
-    "id": "shiva-mainnet-1:SHIVA|shiva-mainnet-1:wSHIVA",
-    "token0": "shiva-mainnet-1:SHIVA",
-    "token1": "shiva-mainnet-1:wSHIVA",
+    "id": "onex-mainnet-1:ONEX|onex-mainnet-1:wONEX",
+    "token0": "onex-mainnet-1:ONEX",
+    "token1": "onex-mainnet-1:wONEX",
     "reserve0": "50000000000000",
     "reserve1": "50000000000000",
     "totalShares": "50000000000000",
     "feeBps": 30
   },
   {
-    "id": "shiva-mainnet-1:SHIVA|shiva-mainnet-1:sSHIVA",
-    "token0": "shiva-mainnet-1:SHIVA",
-    "token1": "shiva-mainnet-1:sSHIVA",
+    "id": "onex-mainnet-1:ONEX|onex-mainnet-1:sONEX",
+    "token0": "onex-mainnet-1:ONEX",
+    "token1": "onex-mainnet-1:sONEX",
     "reserve0": "20000000000000",
     "reserve1": "18000000000000",
     "totalShares": "19000000000000",
     "feeBps": 30
   },
   {
-    "id": "ethereum:USDT|shiva-mainnet-1:SHIVA",
+    "id": "ethereum:USDT|onex-mainnet-1:ONEX",
     "token0": "ethereum:USDT",
-    "token1": "shiva-mainnet-1:SHIVA",
+    "token1": "onex-mainnet-1:ONEX",
     "reserve0": "10000000000000",
     "reserve1": "800000000000000",
     "totalShares": "90000000000000",
     "feeBps": 30
   },
   {
-    "id": "ethereum:ETH|shiva-mainnet-1:SHIVA",
+    "id": "ethereum:ETH|onex-mainnet-1:ONEX",
     "token0": "ethereum:ETH",
-    "token1": "shiva-mainnet-1:SHIVA",
+    "token1": "onex-mainnet-1:ONEX",
     "reserve0": "50000000000",
     "reserve1": "1000000000000000",
     "totalShares": "220000000000000",
     "feeBps": 30
   },
   {
-    "id": "bsc:BNB|shiva-mainnet-1:SHIVA",
+    "id": "bsc:BNB|onex-mainnet-1:ONEX",
     "token0": "bsc:BNB",
-    "token1": "shiva-mainnet-1:SHIVA",
+    "token1": "onex-mainnet-1:ONEX",
     "reserve0": "300000000000",
     "reserve1": "600000000000000",
     "totalShares": "420000000000000",

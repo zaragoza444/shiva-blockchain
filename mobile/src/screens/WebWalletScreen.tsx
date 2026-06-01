@@ -85,7 +85,7 @@ export function WebWalletScreen({ deepLinkHash, onOpenSettings }: Props) {
       }
       if (msg.type === 'share' && msg.text) {
         if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(msg.text, { dialogTitle: 'Shiva Wallet' });
+          await Sharing.shareAsync(msg.text, { dialogTitle: 'OneX Wallet' });
         } else {
           await Clipboard.setStringAsync(msg.text);
         }

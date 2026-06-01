@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#000000" id="meta-theme">
-  <title>Shiva Wallet</title>
+  <title>OneX Wallet</title>
   <link rel="stylesheet" href="okx.css">
   <link rel="stylesheet" href="dex-swap.css">
   <script src="config.js"></script>
@@ -15,10 +15,10 @@
   <div class="app">
     <header class="topbar">
       <div class="topbar-left">
-        <div class="avatar">S</div>
+        <div class="avatar">X</div>
         <button type="button" class="network-pill" id="network-pill" onclick="refreshAll()">
           <span class="network-dot" id="network-dot"></span>
-          <span id="network-name">Shiva</span>
+          <span id="network-name">OneX</span>
         </button>
       </div>
       <div class="topbar-right">
@@ -38,7 +38,7 @@
         <div class="balance-section">
           <div class="balance-label">Total assets</div>
           <div class="balance-total" id="balance-total">—</div>
-          <div class="balance-sub balance-change positive" id="balance-sub">Shiva Wallet</div>
+          <div class="balance-sub balance-change positive" id="balance-sub">OneX Wallet</div>
           <p class="addr" id="addr-short"></p>
         </div>
 
@@ -87,9 +87,9 @@
       <!-- TRADE (AlltraSwap-style DEX) -->
       <section id="screen-trade" class="screen">
         <div class="dex-header">
-          <div class="dex-badge">MODULE::SHIVA_SWAP_v1</div>
+          <div class="dex-badge">MODULE::ONEX_SWAP_v1</div>
           <h1>Swap Tokens</h1>
-          <p class="dex-sub">Trade instantly on Shiva · AMM x·y=k</p>
+          <p class="dex-sub">Trade instantly on OneX · AMM x·y=k</p>
         </div>
 
         <div class="dex-stats">
@@ -146,10 +146,10 @@
               </div>
               <p class="dex-quote" id="swap-quote"></p>
             </div>
-            <button type="button" class="dex-cta" id="swap-cta" onclick="doShivaSwap()">Connect Wallet to Swap</button>
+            <button type="button" class="dex-cta" id="swap-cta" onclick="doOneXSwap()">Connect Wallet to Swap</button>
             <p class="msg" id="swap-msg"></p>
           </div>
-          <p class="dex-footer">POWERED_BY::SHIVA_SMARTCHAIN · FEE 0.30% · SLIPPAGE_PROTECTED</p>
+          <p class="dex-footer">POWERED_BY::ONEX_SMARTCHAIN · FEE 0.30% · SLIPPAGE_PROTECTED</p>
           <div class="dex-status-bar" id="dex-status-bar">
             <span class="off" id="dex-st-api">API</span>
             <span class="off" id="dex-st-node">NODE</span>
@@ -183,7 +183,7 @@
         <div id="swap-mode-bridge" class="hidden">
           <div class="dex-swap-box">
             <div class="dex-panel-head"><label>CROSS-CHAIN BRIDGE</label></div>
-            <p class="msg">Route via SHIVA hub pools</p>
+            <p class="msg">Route via ONEX hub pools</p>
             <label>From</label>
             <select id="bridge-from-chain" class="chain-select" onchange="onChainChange(this,'bridge-from-token')"></select>
             <select id="bridge-from-token"></select>
@@ -218,9 +218,9 @@
           <div class="card-title">Loans</div>
           <div id="loan-list"></div>
           <select id="loan-type"><option value="borrow">Borrow</option><option value="lend">Lend</option></select>
-          <input id="loan-col-key" value="shiva-mainnet-1:SHIVA" placeholder="Collateral" />
+          <input id="loan-col-key" value="onex-mainnet-1:ONEX" placeholder="Collateral" />
           <input id="loan-col-amt" placeholder="Collateral amt" />
-          <input id="loan-debt-key" value="shiva-mainnet-1:wSHIVA" placeholder="Debt token" />
+          <input id="loan-debt-key" value="onex-mainnet-1:wONEX" placeholder="Debt token" />
           <input id="loan-debt-amt" placeholder="Debt amt" />
           <input id="loan-apy" value="5.5" placeholder="APY" />
           <button type="button" class="btn-primary" onclick="createLoan()">Open loan</button>
@@ -298,14 +298,14 @@
       <!-- AI -->
       <section id="screen-ai" class="screen">
         <div class="ai-header">
-          <h1 class="trade-header">Shiva AI</h1>
+          <h1 class="trade-header">OneX AI</h1>
           <span class="ai-mode-badge" id="ai-mode-badge">local</span>
         </div>
-        <p class="msg ai-intro">Ask about your wallet, swaps, staking, bridge, NFTs, or the Shiva blockchain.</p>
+        <p class="msg ai-intro">Ask about your wallet, swaps, staking, bridge, NFTs, or the OneX blockchain.</p>
         <div class="ai-suggestions" id="ai-suggestions"></div>
         <div class="ai-chat" id="ai-chat"></div>
         <div class="ai-input-row">
-          <textarea id="ai-input" rows="2" placeholder="Ask Shiva AI…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
+          <textarea id="ai-input" rows="2" placeholder="Ask OneX AI…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
           <button type="button" class="btn-primary ai-send" onclick="sendAIMessage()">Send</button>
         </div>
       </section>
@@ -322,7 +322,7 @@
         <div class="section-head"><h2>Connected</h2></div>
         <div id="dapp-connected" class="dapp-connected-list"></div>
         <div class="card web3-provider-card">
-          <div class="card-title">Shiva provider</div>
+          <div class="card-title">OneX provider</div>
           <p class="msg">Ed25519 · EIP-1193 compatible via extension</p>
           <p class="addr" id="web3-addr">—</p>
           <button type="button" class="btn-secondary" onclick="copyAddress()">Copy address</button>
@@ -369,7 +369,7 @@
     <select id="send-token"></select>
     <input id="send-to" placeholder="Recipient address" />
     <input id="send-amount" placeholder="Amount" />
-    <input id="send-fee" value="0.001" placeholder="Fee (Shiva)" />
+    <input id="send-fee" value="0.001" placeholder="Fee (OneX)" />
     <button type="button" class="btn-primary" onclick="doSend(); closeSheet()">Confirm send</button>
     <p class="msg" id="send-msg"></p>
   </div>
@@ -377,7 +377,7 @@
   <div class="sheet" id="sheet-receive">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Receive</div>
-    <p class="msg">Your Shiva address — share to receive SHIVA on-chain.</p>
+    <p class="msg">Your OneX address — share to receive ONEX on-chain.</p>
     <p class="addr" id="addr"></p>
     <button type="button" class="btn-primary" onclick="copyAddress()">Copy address</button>
   </div>
@@ -394,7 +394,7 @@
       <button type="button" class="btn-primary" onclick="createWallet(); closeSheet()">Create new wallet</button>
     </div>
     <label>Bridge API (HTTPS)</label>
-    <input id="bridge-url-input" type="url" placeholder="https://your-shiva-bridge.onrender.com" autocomplete="off" />
+    <input id="bridge-url-input" type="url" placeholder="https://your-onex-bridge.onrender.com" autocomplete="off" />
     <button type="button" class="btn-secondary" onclick="saveBridgeUrl()">Save bridge URL &amp; reload</button>
     <p class="msg">On GitHub Pages this is required for wallet actions. Logos, USD prices &amp; charts work via CoinGecko without bridge.</p>
     <p class="msg">Tip: <code>?bridge=https://your-bridge</code> in the URL saves automatically.</p>

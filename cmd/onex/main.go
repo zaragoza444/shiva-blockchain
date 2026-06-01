@@ -10,9 +10,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/shiva-blockchain/shiva/internal/rpc"
-	"github.com/shiva-blockchain/shiva/internal/types"
-	"github.com/shiva-blockchain/shiva/internal/wallet"
+	"github.com/onex-blockchain/onex/internal/rpc"
+	"github.com/onex-blockchain/onex/internal/types"
+	"github.com/onex-blockchain/onex/internal/wallet"
 )
 
 func main() {
@@ -34,11 +34,11 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println(`Shiva CLI
+	fmt.Println(`OneX CLI
 
-  shiva wallet-create [-out PATH]
-  shiva balance -address HEX [-api URL]
-  shiva send -wallet PATH -to HEX -amount DECIMAL [-fee DECIMAL] [-api URL]`)
+  onex wallet-create [-out PATH]
+  onex balance -address HEX [-api URL]
+  onex send -wallet PATH -to HEX -amount DECIMAL [-fee DECIMAL] [-api URL]`)
 }
 
 func runWalletCreate(args []string) {
@@ -63,7 +63,7 @@ func runBalance(args []string) {
 	api := fs.String("api", "http://127.0.0.1:8545", "node API base URL")
 	_ = fs.Parse(args)
 	if *addr == "" {
-		log.Fatal("usage: shiva balance -address HEX")
+		log.Fatal("usage: onex balance -address HEX")
 	}
 	url := strings.TrimRight(*api, "/") + "/api/v1/balance/" + strings.TrimSpace(*addr)
 	resp, err := http.Get(url)
@@ -85,12 +85,12 @@ func runSend(args []string) {
 	fs := flag.NewFlagSet("send", flag.ExitOnError)
 	walletPath := fs.String("wallet", "", "wallet JSON file")
 	to := fs.String("to", "", "recipient address")
-	amountStr := fs.String("amount", "", "amount in SHIVA e.g. 1.5")
-	feeStr := fs.String("fee", "0.001", "fee in SHIVA")
+	amountStr := fs.String("amount", "", "amount in ONEX e.g. 1.5")
+	feeStr := fs.String("fee", "0.001", "fee in ONEX")
 	api := fs.String("api", "http://127.0.0.1:8545", "node API base URL")
 	_ = fs.Parse(args)
 	if *walletPath == "" || *to == "" || *amountStr == "" {
-		log.Fatal("usage: shiva send -wallet PATH -to HEX -amount DECIMAL")
+		log.Fatal("usage: onex send -wallet PATH -to HEX -amount DECIMAL")
 	}
 	w, err := wallet.Load(*walletPath)
 	if err != nil {

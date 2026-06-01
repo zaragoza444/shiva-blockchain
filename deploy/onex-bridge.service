@@ -1,0 +1,22 @@
+[Unit]
+Description=OneX Wallet bridge (DeFi UI + portfolio)
+After=network-online.target onexd.service
+Wants=onexd.service
+
+[Service]
+Type=simple
+User=onex
+Group=onex
+WorkingDirectory=/opt/onex
+ExecStart=/opt/onex/bin/onex-bridge \
+  -node http://127.0.0.1:8545 \
+  -listen 127.0.0.1:9338 \
+  -config /var/lib/onex-bridge/bridge.json \
+  -wallet /var/lib/onex-bridge/wallets/default.json
+Environment=ONEX_PROJECT_ROOT=/opt/onex
+EnvironmentFile=-/etc/onex/onex.env
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

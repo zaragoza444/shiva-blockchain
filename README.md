@@ -1,49 +1,49 @@
-# Shiva Blockchain
+# OneX Blockchain
 
 Production proof-of-work blockchain: Ed25519 accounts, P2P sync, REST + JSON-RPC, embedded explorer, browser wallet (MetaMask-style UX), optional Chrome extension.
 
 ## Quick start (Windows)
 
 ```bat
-build-shiva.bat
-run-shiva.bat
+build-onex.bat
+run-onex.bat
 ```
 
 - Explorer & wallet: http://localhost:8545/explorer/
 - JSON-RPC: http://localhost:8545/rpc
 - Health: http://localhost:8545/health
 
-## Shiva Wallet — full DeFi UI
+## OneX Wallet — full DeFi UI
 
 Open **http://127.0.0.1:9338/wallet/** for:
 
 | Feature | Description |
 |---------|-------------|
 | **Portfolio** | Multi-chain & multi-token balances |
-| **Send** | SHIVA on-chain + portfolio tokens |
+| **Send** | ONEX on-chain + portfolio tokens |
 | **Deposit** | Bridge in from 13+ chains |
-| **Shiva Swap** | Uniswap-style AMM (x·y=k), liquidity pools, 0.3% fee |
-| **Bridge tab** | Cross-chain via SHIVA hub pools |
-| **NFT** | Mint & view Shiva NFTs |
-| **Tasks** | Earn rewards (SHIVA, wSHIVA) |
+| **OneX Swap** | Uniswap-style AMM (x·y=k), liquidity pools, 0.3% fee |
+| **Bridge tab** | Cross-chain via ONEX hub pools |
+| **NFT** | Mint & view OneX NFTs |
+| **Tasks** | Earn rewards (ONEX, wONEX) |
 | **Loans** | Borrow / lend with collateral |
-| **Shiva AI** | Wallet assistant (local + optional cloud LLM) |
+| **OneX AI** | Wallet assistant (local + optional cloud LLM) |
 
-Chains: Shiva, Ethereum, BSC, Polygon, Arbitrum, Optimism, Avalanche, Base, Solana, Bitcoin, TRON, ALLTRA, testnet.
+Chains: OneX, Ethereum, BSC, Polygon, Arbitrum, Optimism, Avalanche, Base, Solana, Bitcoin, TRON, ALLTRA, testnet.
 
-### Shiva AI
+### OneX AI
 
 - **Wallet tab “AI”** — chat with portfolio-aware help
 - **API:** `POST /bridge/ai/chat` (wallet) · `POST /api/v1/ai/chat` (node)
-- **CLI:** `shiva-ai -ask "How do I swap?"` or interactive mode
-- **Cloud mode:** set `SHIVA_AI_API_KEY` (OpenAI-compatible endpoint via `SHIVA_AI_BASE_URL`)
+- **CLI:** `onex-ai -ask "How do I swap?"` or interactive mode
+- **Cloud mode:** set `ONEX_AI_API_KEY` (OpenAI-compatible endpoint via `ONEX_AI_BASE_URL`)
 - **Local mode:** works without a key (built-in answers + navigation hints)
 
 Configs: `configs/chains.json`, `tokens.json`, `swap-pairs.json`
 
-## Shiva Wallet bridge (local)
+## OneX Wallet bridge (local)
 
-The **bridge** (`shiva-bridge`) connects your wallet to the node on this PC:
+The **bridge** (`onex-bridge`) connects your wallet to the node on this PC:
 
 | Component | URL |
 |-----------|-----|
@@ -52,27 +52,27 @@ The **bridge** (`shiva-bridge`) connects your wallet to the node on this PC:
 | Bridge JSON-RPC | http://127.0.0.1:9338/rpc |
 
 ```bat
-run-shiva-wallet.bat
+run-onex-wallet.bat
 ```
 
-Config: `%USERPROFILE%\.shiva\bridge.json` · Wallet file: `%USERPROFILE%\.shiva\wallets\default.json`
+Config: `%USERPROFILE%\.onex\bridge.json` · Wallet file: `%USERPROFILE%\.onex\wallets\default.json`
 
 Fix desktop shortcut: `powershell -File install-wallet-shortcut.ps1`
 
 ## Wallet (like MetaMask)
 
-Shiva uses **Ed25519** (64-character hex addresses), not Ethereum. **Standard MetaMask cannot sign Shiva transactions.**
+OneX uses **Ed25519** (64-character hex addresses), not Ethereum. **Standard MetaMask cannot sign OneX transactions.**
 
 | Option | How |
 |--------|-----|
 | **Built-in wallet** | Open `/explorer/` → **Wallet** tab → Create / Import → Connect |
 | **Browser extension** | Chrome → Load unpacked → `extension/` folder |
-| **CLI** | `shiva wallet-create` · `shiva send -wallet ~/.shiva/wallets/default.json -to ADDR -amount 1` |
-| **dApp API** | `window.shiva.request({ method: 'shiva_requestAccounts' })` |
+| **CLI** | `onex wallet-create` · `onex send -wallet ~/.onex/wallets/default.json -to ADDR -amount 1` |
+| **dApp API** | `window.onex.request({ method: 'onex_requestAccounts' })` |
 
 ### Add network to MetaMask (read-only chain info)
 
-MetaMask can show the network but **will not sign** Shiva txs. Use Shiva Wallet for sends.
+MetaMask can show the network but **will not sign** OneX txs. Use OneX Wallet for sends.
 
 ```javascript
 // chainId 9001 = 0x2329 (mainnet)
@@ -80,8 +80,8 @@ await window.ethereum?.request({
   method: 'wallet_addEthereumChain',
   params: [{
     chainId: '0x2329',
-    chainName: 'Shiva Mainnet',
-    nativeCurrency: { name: 'Shiva', symbol: 'SHIVA', decimals: 8 },
+    chainName: 'OneX Mainnet',
+    nativeCurrency: { name: 'OneX', symbol: 'ONEX', decimals: 8 },
     rpcUrls: ['https://your-node.example/rpc'],
     blockExplorerUrls: ['https://your-node.example/explorer/'],
   }],
@@ -105,50 +105,50 @@ docker compose -f docker-compose.prod.yml up -d --build
 ### Docker (node only)
 
 ```bash
-docker compose up -d shivad
+docker compose up -d onexd
 ```
 
 Testnet + faucet:
 
 ```bash
-export SHIVA_FAUCET_PRIVATE_KEY=<hex>
-docker compose --profile testnet up -d shivad-testnet
+export ONEX_FAUCET_PRIVATE_KEY=<hex>
+docker compose --profile testnet up -d onexd-testnet
 ```
 
 ### TLS + API key
 
 ```bash
-shivad -tls-cert /etc/shiva/tls/fullchain.pem -tls-key /etc/shiva/tls/privkey.pem -api-key "$SHIVA_API_KEY"
+onexd -tls-cert /etc/onex/tls/fullchain.pem -tls-key /etc/onex/tls/privkey.pem -api-key "$ONEX_API_KEY"
 ```
 
 Environment (see `.env.example`):
 
-- `SHIVA_FAUCET_PRIVATE_KEY` — testnet faucet
-- `SHIVA_API_KEY` — protect `POST /api/v1/tx` and `/rpc`
-- `SHIVA_CORS_ORIGINS` — browser wallet origins
+- `ONEX_FAUCET_PRIVATE_KEY` — testnet faucet
+- `ONEX_API_KEY` — protect `POST /api/v1/tx` and `/rpc`
+- `ONEX_CORS_ORIGINS` — browser wallet origins
 
 ### systemd + nginx
 
-- `deploy/shivad.service` — node unit file
+- `deploy/onexd.service` — node unit file
 - `deploy/nginx.conf` — reverse proxy (use with `docker compose --profile proxy`)
 
 ## JSON-RPC methods
 
 | Method | Description |
 |--------|-------------|
-| `shiva_chainId` | String chain id |
+| `onex_chainId` | String chain id |
 | `eth_chainId` | `0x2329` (network id 9001) |
-| `shiva_getBalance` | Balance + nonce |
-| `shiva_getTransactionCount` | Account nonce |
-| `shiva_sendTransaction` | Submit signed tx |
+| `onex_getBalance` | Balance + nonce |
+| `onex_getTransactionCount` | Account nonce |
+| `onex_sendTransaction` | Submit signed tx |
 | `eth_getBalance` / `eth_getTransactionCount` | Hex-encoded compat |
 
 ## Networks
 
 | Network | Chain ID | Network ID | Genesis |
 |---------|----------|------------|---------|
-| Mainnet | shiva-mainnet-1 | 9001 | `configs/genesis.json` |
-| Testnet | shiva-testnet-1 | 9002 | `configs/genesis-testnet.json` |
+| Mainnet | onex-mainnet-1 | 9001 | `configs/genesis.json` |
+| Testnet | onex-testnet-1 | 9002 | `configs/genesis-testnet.json` |
 
 ## Build
 
@@ -164,24 +164,24 @@ Expo WebView wrapper in [`mobile/`](mobile/) — see [mobile/PUBLISH.md](mobile/
 
 ## Publish to GitHub & Gitea
 
-1. Create empty repos named `shiva-blockchain` on [GitHub](https://github.com/new) and your Gitea server.
+1. Create empty repos named `onex-blockchain` on [GitHub](https://github.com/new) and your Gitea server.
 2. Run (replace URLs with yours — see `remotes.example.env`):
 
 ```powershell
 .\scripts\publish-remotes.ps1 `
-  -GitHub "git@github.com:YOUR_USER/shiva-blockchain.git" `
-  -Gitea "git@git.YOUR_DOMAIN:YOUR_USER/shiva-blockchain.git"
+  -GitHub "git@github.com:YOUR_USER/onex-blockchain.git" `
+  -Gitea "git@git.YOUR_DOMAIN:YOUR_USER/onex-blockchain.git"
 ```
 
 CI runs on push: `.github/workflows/ci.yml` (GitHub) and `.gitea/workflows/ci.yml` (Gitea).
 
 ## Layout
 
-- `cmd/shivad` — node
-- `cmd/shiva` — CLI wallet
-- `cmd/shiva-bridge` — wallet bridge + OKX-style DeFi UI
+- `cmd/onexd` — node
+- `cmd/onex` — CLI wallet
+- `cmd/onex-bridge` — wallet bridge + OKX-style DeFi UI
 - `internal/api` — REST, explorer, middleware
 - `internal/bridge` — portfolio, swap, staking, static wallet
 - `internal/rpc` — JSON-RPC
-- `extension/` — Shiva Wallet (Chrome)
+- `extension/` — OneX Wallet (Chrome)
 - `deploy/` — nginx, systemd

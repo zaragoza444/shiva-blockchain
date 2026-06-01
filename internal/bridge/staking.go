@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/shiva-blockchain/shiva/internal/rpc"
+	"github.com/onex-blockchain/onex/internal/rpc"
 )
 
 type StakePool struct {

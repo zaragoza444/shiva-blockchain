@@ -103,11 +103,11 @@ def main() -> None:
         [126, 126, W - 126, W - 126], radius=168, outline=(0x2A, 0x3A, 0x66, 150), width=8
     )
 
-    img.save("shiva-icon.png")
+    img.save("onex-icon.png")
 
     sizes = [16, 24, 32, 48, 64, 128, 256]
     icons = [img.resize((s, s), Image.LANCZOS) for s in sizes]
-    icons[0].save("shiva-icon.ico", format="ICO", sizes=[(s, s) for s in sizes])
+    icons[0].save("onex-icon.ico", format="ICO", sizes=[(s, s) for s in sizes])
 
 
 if __name__ == "__main__":

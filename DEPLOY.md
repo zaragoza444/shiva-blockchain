@@ -1,14 +1,14 @@
 # Production deployment
 
-Run Shiva blockchain + OKX-style wallet bridge on a server (Docker or systemd).
+Run OneX blockchain + OKX-style wallet bridge on a server (Docker or systemd).
 
 ## Docker (recommended)
 
 ```bash
-git clone <your-repo-url> shiva-blockchain
-cd shiva-blockchain
+git clone <your-repo-url> onex-blockchain
+cd onex-blockchain
 cp .env.example .env
-# Edit .env: SHIVA_API_KEY, SHIVA_CORS_ORIGINS=https://your-domain.com
+# Edit .env: ONEX_API_KEY, ONEX_CORS_ORIGINS=https://your-domain.com
 
 docker compose -f docker-compose.prod.yml up -d --build
 ```
@@ -32,26 +32,26 @@ docker compose -f docker-compose.prod.yml --profile proxy up -d
 ## systemd (bare metal)
 
 ```bash
-sudo mkdir -p /opt/shiva/bin /var/lib/shiva /var/lib/shiva-bridge/wallets
-sudo cp bin/shivad bin/shiva bin/shiva-bridge /opt/shiva/bin/
-sudo cp -r configs /opt/shiva/
-sudo cp deploy/shivad.service deploy/shiva-bridge.service /etc/systemd/system/
-sudo cp .env.example /etc/shiva/shiva.env
-# Edit /etc/shiva/shiva.env
+sudo mkdir -p /opt/onex/bin /var/lib/onex /var/lib/onex-bridge/wallets
+sudo cp bin/onexd bin/onex bin/onex-bridge /opt/onex/bin/
+sudo cp -r configs /opt/onex/
+sudo cp deploy/onexd.service deploy/onex-bridge.service /etc/systemd/system/
+sudo cp .env.example /etc/onex/onex.env
+# Edit /etc/onex/onex.env
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now shivad shiva-bridge
+sudo systemctl enable --now onexd onex-bridge
 ```
 
 ## Security checklist
 
-- Set `SHIVA_API_KEY` on the node for `POST /api/v1/tx` and `/rpc`
-- Restrict `SHIVA_CORS_ORIGINS` to your wallet domain
+- Set `ONEX_API_KEY` on the node for `POST /api/v1/tx` and `/rpc`
+- Restrict `ONEX_CORS_ORIGINS` to your wallet domain
 - Use TLS (`--profile proxy` or nginx in front)
 - Never commit `.env`, wallet JSON, or private keys
-- Testnet faucet: set `SHIVA_FAUCET_PRIVATE_KEY` only on testnet hosts
+- Testnet faucet: set `ONEX_FAUCET_PRIVATE_KEY` only on testnet hosts
 
-## Shiva Wallet mobile apps
+## OneX Wallet mobile apps
 
 React Native (Expo) WebView app in [`mobile/`](mobile/).
 
@@ -67,12 +67,12 @@ cd mobile && npm install && eas build --platform all --profile production
 
 ```powershell
 # Windows
-.\scripts\publish-remotes.ps1 -GitHub "git@github.com:USER/shiva-blockchain.git" -Gitea "git@git.example.com:USER/shiva-blockchain.git"
+.\scripts\publish-remotes.ps1 -GitHub "git@github.com:USER/onex-blockchain.git" -Gitea "git@git.example.com:USER/onex-blockchain.git"
 ```
 
 ```bash
 # Linux
-./scripts/publish-remotes.sh git@github.com:USER/shiva-blockchain.git git@git.example.com:USER/shiva-blockchain.git
+./scripts/publish-remotes.sh git@github.com:USER/onex-blockchain.git git@git.example.com:USER/onex-blockchain.git
 ```
 
 Create empty repos on GitHub and Gitea first, then run the script.

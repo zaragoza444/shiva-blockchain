@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shiva-blockchain/shiva/internal/rpc"
-	"github.com/shiva-blockchain/shiva/internal/types"
-	"github.com/shiva-blockchain/shiva/internal/wallet"
+	"github.com/onex-blockchain/onex/internal/rpc"
+	"github.com/onex-blockchain/onex/internal/types"
+	"github.com/onex-blockchain/onex/internal/wallet"
 )
 
 //go:embed static/wallet/*
@@ -31,7 +31,7 @@ func NewServer(b *Bridge) *Server {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, map[string]string{"status": "ok", "service": "shiva-bridge"})
+		writeJSON(w, map[string]string{"status": "ok", "service": "onex-bridge"})
 	})
 	mux.HandleFunc("/bridge/status", s.handleStatus)
 	mux.HandleFunc("/bridge/wallet/load", s.handleWalletLoad)
@@ -52,8 +52,8 @@ func (s *Server) Handler() http.Handler {
 		http.NotFound(w, r)
 	})
 	mw := newMiddleware(
-		splitCSVEnv("SHIVA_CORS_ORIGINS"),
-		strings.TrimSpace(os.Getenv("SHIVA_API_KEY")),
+		splitCSVEnv("ONEX_CORS_ORIGINS"),
+		strings.TrimSpace(os.Getenv("ONEX_API_KEY")),
 	)
 	return mw.wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mux.ServeHTTP(w, r)
@@ -85,7 +85,7 @@ func (m *middleware) wrap(next http.Handler) http.Handler {
 			return
 		}
 		if m.apiKey != "" && needsAPIKey(r) {
-			if r.Header.Get("X-Shiva-Api-Key") != m.apiKey && r.Header.Get("Authorization") != "Bearer "+m.apiKey {
+			if r.Header.Get("X-OneX-Api-Key") != m.apiKey && r.Header.Get("Authorization") != "Bearer "+m.apiKey {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
@@ -109,7 +109,7 @@ func (m *middleware) handleCORS(w http.ResponseWriter, r *http.Request) bool {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Vary", "Origin")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Shiva-Api-Key")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-OneX-Api-Key")
 		w.Header().Set("Access-Control-Max-Age", "86400")
 	}
 	if r.Method == http.MethodOptions {
@@ -154,10 +154,10 @@ func needsAPIKey(r *http.Request) bool {
 		"/bridge/stake",
 		"/bridge/unstake",
 		"/bridge/tokens/create",
-		"/bridge/shiva-swap/swap",
-		"/bridge/shiva-swap/liquidity/add",
-		"/bridge/shiva-swap/liquidity/remove",
-		"/bridge/shiva-swap/bridge":
+		"/bridge/onex-swap/swap",
+		"/bridge/onex-swap/liquidity/add",
+		"/bridge/onex-swap/liquidity/remove",
+		"/bridge/onex-swap/bridge":
 		return true
 	default:
 		return false
@@ -325,7 +325,7 @@ func (s *Server) handleRPC(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	walletMethods := strings.HasPrefix(req.Method, "shiva_") ||
+	walletMethods := strings.HasPrefix(req.Method, "onex_") ||
 		req.Method == "eth_requestAccounts" || req.Method == "eth_accounts"
 	if walletMethods {
 		result, err := s.b.HandleWalletRPC(req.Method, req.Params)
@@ -358,7 +358,7 @@ func writeJSON(w http.ResponseWriter, v interface{}) {
 }
 
 func (s *Server) Start(addr string) error {
-	log.Printf("shiva-bridge: wallet UI http://127.0.0.1%s/wallet/", addr)
-	log.Printf("shiva-bridge: JSON-RPC http://127.0.0.1%s/rpc -> %s", addr, s.b.Config().NodeURL)
+	log.Printf("onex-bridge: wallet UI http://127.0.0.1%s/wallet/", addr)
+	log.Printf("onex-bridge: JSON-RPC http://127.0.0.1%s/rpc -> %s", addr, s.b.Config().NodeURL)
 	return http.ListenAndServe(addr, s.Handler())
 }

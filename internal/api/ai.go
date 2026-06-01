@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/shiva-blockchain/shiva/internal/ai"
+	"github.com/onex-blockchain/onex/internal/ai"
 )
 
 func (s *Server) handleAIStatus(w http.ResponseWriter, r *http.Request) {

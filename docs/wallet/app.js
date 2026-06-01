@@ -1,16 +1,16 @@
-const API = (typeof window !== 'undefined' && window.SHIVA_BRIDGE_URL)
-  ? String(window.SHIVA_BRIDGE_URL).replace(/\/$/, '')
+const API = (typeof window !== 'undefined' && window.ONEX_BRIDGE_URL)
+  ? String(window.ONEX_BRIDGE_URL).replace(/\/$/, '')
   : '';
 let chains = [], tokens = [], portfolio = null;
-let selectedChain = 'shiva-mainnet-1';
+let selectedChain = 'onex-mainnet-1';
 let chartPeriod = '24h';
-const BALANCE_HIST_KEY = 'shiva_balance_history';
-const DAPP_CONNECTED_KEY = 'shiva_dapp_connected';
-const THEME_KEY = 'shiva_theme';
+const BALANCE_HIST_KEY = 'onex_balance_history';
+const DAPP_CONNECTED_KEY = 'onex_dapp_connected';
+const THEME_KEY = 'onex_theme';
 
 const FEATURED_DAPPS = [
   { name: 'Explorer', icon: '🔍', url: 'http://127.0.0.1:8545/' },
-  { name: 'Shiva Swap', icon: '⇄', action: () => showTab('trade') },
+  { name: 'OneX Swap', icon: '⇄', action: () => showTab('trade') },
   { name: 'Stake', icon: '📈', action: () => showTab('earn') },
   { name: 'NFT', icon: '🖼', action: () => { showTab('discover'); showDiscoverSection('nft'); } },
   { name: 'Bridge', icon: '🌉', action: () => { showTab('trade'); setSwapMode('bridge'); } },
@@ -20,7 +20,7 @@ const FEATURED_DAPPS = [
 ];
 
 async function api(path, opts = {}) {
-  if (!API) return { error: 'Bridge URL not set. Open Settings and add your shiva-bridge HTTPS URL.' };
+  if (!API) return { error: 'Bridge URL not set. Open Settings and add your onex-bridge HTTPS URL.' };
   try {
     const r = await fetch(API + path, { ...opts, mode: 'cors' });
     const text = await r.text();
@@ -34,7 +34,7 @@ async function api(path, opts = {}) {
 }
 
 function applyFallbackCatalog() {
-  const fb = window.SHIVA_FALLBACK;
+  const fb = window.ONEX_FALLBACK;
   if (!fb) return;
   if (!chains?.length) chains = fb.chains || [];
   if (!tokens?.length) tokens = fb.tokens || [];
@@ -44,8 +44,8 @@ function saveBridgeUrl() {
   const input = document.getElementById('bridge-url-input');
   const v = (input?.value || '').trim().replace(/\/$/, '');
   if (!v) return;
-  try { localStorage.setItem('SHIVA_BRIDGE_URL', v); } catch (_) {}
-  window.SHIVA_BRIDGE_URL = v;
+  try { localStorage.setItem('ONEX_BRIDGE_URL', v); } catch (_) {}
+  window.ONEX_BRIDGE_URL = v;
   location.reload();
 }
 
@@ -110,8 +110,8 @@ function closeSheet() {
 function copyAddress() {
   const a = portfolio?.address || document.getElementById('addr')?.textContent;
   if (!a) return;
-  if (window.ShivaMobile?.copy) {
-    window.ShivaMobile.copy(a);
+  if (window.OneXMobile?.copy) {
+    window.OneXMobile.copy(a);
     return;
   }
   if (navigator.clipboard?.writeText) navigator.clipboard.writeText(a);
@@ -355,9 +355,9 @@ async function initAI() {
     }
   } catch (_) {}
   if (!aiHistory.length) {
-    appendAIBubble('assistant', 'Hi! I\'m Shiva AI. Ask about balances, swaps, stake, bridge, NFTs, or running your node.');
+    appendAIBubble('assistant', 'Hi! I\'m OneX AI. Ask about balances, swaps, stake, bridge, NFTs, or running your node.');
   }
-  renderAISuggestions(['Show my balance', 'How do I swap?', 'Explain staking', 'What is Shiva Swap?']);
+  renderAISuggestions(['Show my balance', 'How do I swap?', 'Explain staking', 'What is OneX Swap?']);
 }
 
 function renderAISuggestions(list) {
@@ -411,7 +411,7 @@ async function sendAIMessage() {
     if (j.action?.type === 'sheet' && j.action.sheet) openSheet(j.action.sheet);
   } catch (e) {
     typing.remove();
-    appendAIBubble('assistant', 'Could not reach Shiva AI. Is shiva-bridge running?');
+    appendAIBubble('assistant', 'Could not reach OneX AI. Is onex-bridge running?');
   }
 }
 
@@ -469,7 +469,7 @@ async function bridgeStatus() {
   const dot = document.getElementById('network-dot');
   const name = document.getElementById('network-name');
   if (dot) dot.classList.toggle('offline', !j.nodeOk);
-  if (name) name.textContent = j.nodeOk ? (j.chainId || 'Shiva').replace('shiva-', '').replace('-1', '') : 'Offline';
+  if (name) name.textContent = j.nodeOk ? (j.chainId || 'OneX').replace('onex-', '').replace('-1', '') : 'Offline';
 }
 
 async function refreshAll() {
@@ -752,7 +752,7 @@ function tokenKey(chain, tokenId) {
 let swapQuoteTimer;
 function swapQuoteDebounced() {
   clearTimeout(swapQuoteTimer);
-  swapQuoteTimer = setTimeout(shivaSwapQuote, 400);
+  swapQuoteTimer = setTimeout(onexSwapQuote, 400);
 }
 
 function setSwapMode(mode) {
@@ -795,7 +795,7 @@ function updateSwapCTA() {
   } else {
     btn.textContent = 'Swap';
     btn.classList.remove('secondary');
-    btn.onclick = () => doShivaSwap();
+    btn.onclick = () => doOneXSwap();
   }
 }
 
@@ -825,7 +825,7 @@ function renderDexPoolCards(pools, targetId) {
     return `<div class="dex-pool-card" onclick="selectPoolFromCard('${p.id}')">
       <div>
         <div class="pair">${a} / ${b}</div>
-        <div class="meta">Fee ${fee}% · Shiva AMM</div>
+        <div class="meta">Fee ${fee}% · OneX AMM</div>
       </div>
       <div class="reserves">${fmtAtomic(p.reserve0)}<br><span style="font-size:11px;color:#6b7a8f">${fmtAtomic(p.reserve1)}</span></div>
     </div>`;
@@ -867,16 +867,16 @@ function flipSwap() {
   const tmp = ft.innerHTML; ft.innerHTML = tt.innerHTML; tt.innerHTML = tmp;
   const ti = ft.selectedIndex; ft.selectedIndex = tt.selectedIndex; tt.selectedIndex = ti;
   document.getElementById('swap-amount').value = out;
-  shivaSwapQuote();
+  onexSwapQuote();
 }
 
-async function shivaSwapQuote() {
+async function onexSwapQuote() {
   const tin = tokenKey(document.getElementById('swap-from-chain').value, document.getElementById('swap-from-token').value);
   const tout = tokenKey(document.getElementById('swap-to-chain').value, document.getElementById('swap-to-token').value);
   const amount = document.getElementById('swap-amount').value;
   if (!amount) return;
   const q = new URLSearchParams({ tokenIn: tin, tokenOut: tout, amount });
-  const j = await api('/bridge/shiva-swap/quote?' + q);
+  const j = await api('/bridge/onex-swap/quote?' + q);
   const quoteEl = document.getElementById('swap-quote');
   if (j.error) {
     if (quoteEl) { quoteEl.textContent = j.error; quoteEl.classList.add('err'); }
@@ -890,7 +890,7 @@ async function shivaSwapQuote() {
   }
 }
 
-async function doShivaSwap() {
+async function doOneXSwap() {
   const tin = tokenKey(document.getElementById('swap-from-chain').value, document.getElementById('swap-from-token').value);
   const tout = tokenKey(document.getElementById('swap-to-chain').value, document.getElementById('swap-to-token').value);
   const slip = parseFloat(document.getElementById('swap-slippage').value) || 0.5;
@@ -899,14 +899,14 @@ async function doShivaSwap() {
     amount: document.getElementById('swap-amount').value,
     slippageBps: Math.round(slip * 100),
   };
-  const j = await api('/bridge/shiva-swap/swap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await api('/bridge/onex-swap/swap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   document.getElementById('swap-msg').textContent = j.error || `Swapped! Received ${fmtAtomic(j.amountOut)}`;
   loadAmmPools();
   refreshAll();
 }
 
 async function loadAmmPools() {
-  const pools = await api('/bridge/shiva-swap/pools');
+  const pools = await api('/bridge/onex-swap/pools');
   updateDexStats(pools);
   renderDexPoolCards(pools, 'dex-top-pools');
   renderDexPoolCards(pools, 'amm-pools');
@@ -929,14 +929,14 @@ function showPoolReserves() {
 async function addLiquidity() {
   const o = document.getElementById('liq-pool').selectedOptions[0];
   const body = { token0: o.dataset.t0, token1: o.dataset.t1, amount0: document.getElementById('liq-amount0').value, amount1: document.getElementById('liq-amount1').value };
-  const j = await api('/bridge/shiva-swap/liquidity/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await api('/bridge/onex-swap/liquidity/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   document.getElementById('liq-msg').textContent = j.error || `Added liquidity · shares ${j.shares}`;
   loadAmmPools(); refreshAll();
 }
 
 async function removeLiquidity() {
   const body = { poolId: document.getElementById('liq-pool').value, shares: document.getElementById('liq-remove-shares').value };
-  const j = await api('/bridge/shiva-swap/liquidity/remove', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await api('/bridge/onex-swap/liquidity/remove', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   document.getElementById('liq-msg').textContent = j.error || `Removed ${fmtAtomic(j.amount0)} + ${fmtAtomic(j.amount1)}`;
   loadAmmPools(); refreshAll();
 }
@@ -945,7 +945,7 @@ async function bridgeQuote() {
   const tin = tokenKey(document.getElementById('bridge-from-chain').value, document.getElementById('bridge-from-token').value);
   const tout = tokenKey(document.getElementById('bridge-to-chain').value, document.getElementById('bridge-to-token').value);
   const q = new URLSearchParams({ tokenIn: tin, tokenOut: tout, amount: document.getElementById('bridge-amount').value });
-  const j = await api('/bridge/shiva-swap/bridge/quote?' + q);
+  const j = await api('/bridge/onex-swap/bridge/quote?' + q);
   document.getElementById('bridge-quote').textContent = j.error || `Route: ${(j.route||[]).map(k=>k.split(':')[1]).join(' → ')} · Out ${fmtAtomic(j.amountOut)}`;
 }
 
@@ -953,7 +953,7 @@ async function bridgeSwap() {
   const tin = tokenKey(document.getElementById('bridge-from-chain').value, document.getElementById('bridge-from-token').value);
   const tout = tokenKey(document.getElementById('bridge-to-chain').value, document.getElementById('bridge-to-token').value);
   const body = { tokenIn: tin, tokenOut: tout, amount: document.getElementById('bridge-amount').value, slippageBps: 50 };
-  const j = await api('/bridge/shiva-swap/bridge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await api('/bridge/onex-swap/bridge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   document.getElementById('bridge-msg').textContent = j.error || 'Bridge swap complete';
   loadAmmPools(); refreshAll();
 }

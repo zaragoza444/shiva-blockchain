@@ -1,7 +1,7 @@
 # Push main to GitHub and enable GitHub Pages (Actions / workflow deployment).
 param(
     [string]$GitHubUser = "zaragoza444",
-    [string]$RepoName = "shiva-blockchain",
+    [string]$RepoName = "onex-blockchain",
     [string]$BridgeUrl = ""
 )
 
@@ -35,8 +35,8 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if ($BridgeUrl) {
     $url = $BridgeUrl.Trim().TrimEnd('/')
-    Write-Host "Setting SHIVA_BRIDGE_PUBLIC_URL = $url"
-    & $gh variable set SHIVA_BRIDGE_PUBLIC_URL --body $url --repo $repo
+    Write-Host "Setting ONEX_BRIDGE_PUBLIC_URL = $url"
+    & $gh variable set ONEX_BRIDGE_PUBLIC_URL --body $url --repo $repo
 }
 
 Write-Host "Enabling GitHub Pages (GitHub Actions source) ..."
@@ -59,4 +59,4 @@ if ($run) {
 }
 Write-Host ""
 Write-Host "In GitHub: Settings → Pages → Build and deployment should show 'GitHub Actions'."
-Write-Host "Optional: set SHIVA_BRIDGE_PUBLIC_URL (Actions variable) to your bridge HTTPS URL for live swaps."
+Write-Host "Optional: set ONEX_BRIDGE_PUBLIC_URL (Actions variable) to your bridge HTTPS URL for live swaps."

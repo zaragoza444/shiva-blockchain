@@ -1,4 +1,4 @@
-/** Token logos (CoinGecko CDN + local Shiva assets) and price helpers. */
+/** Token logos (CoinGecko CDN + local OneX assets) and price helpers. */
 const TOKEN_LOGOS = {
   BTC: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
   ETH: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
@@ -10,10 +10,10 @@ const TOKEN_LOGOS = {
   AVAX: 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
   SOL: 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
   TRX: 'https://assets.coingecko.com/coins/images/1094/small/tron-logo.png',
-  SHIVA: 'assets/tokens/shiva.svg',
-  tSHIVA: 'assets/tokens/shiva.svg',
-  wSHIVA: 'assets/tokens/wshiva.svg',
-  sSHIVA: 'assets/tokens/sshiva.svg',
+  ONEX: 'assets/tokens/onex.svg',
+  tONEX: 'assets/tokens/onex.svg',
+  wONEX: 'assets/tokens/wonex.svg',
+  sONEX: 'assets/tokens/sonex.svg',
   sETH: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
   sUSDT: 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
   sBNB: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
@@ -26,7 +26,7 @@ const CG_IDS = {
   AVAX: 'avalanche-2', SOL: 'solana', TRX: 'tron',
 };
 
-const SYNTHETIC_USD = { SHIVA: 0.01, tSHIVA: 0.01, wSHIVA: 0.01, sSHIVA: 0.0095, ALL: 0.00042 };
+const SYNTHETIC_USD = { ONEX: 0.01, tONEX: 0.01, wONEX: 0.01, sONEX: 0.0095, ALL: 0.00042 };
 
 let marketPrices = {};
 let marketPricesAt = 0;
@@ -35,7 +35,7 @@ const MARKET_TTL_MS = 90_000;
 function walletAsset(path) {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  const base = (typeof window !== 'undefined' && window.SHIVA_WALLET_BASE) || '';
+  const base = (typeof window !== 'undefined' && window.ONEX_WALLET_BASE) || '';
   return base + path.replace(/^\//, '');
 }
 

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/onex-blockchain/onex/internal/legacy"
 )
 
 type Config struct {
@@ -15,17 +17,15 @@ type Config struct {
 }
 
 func DefaultConfig() Config {
-	home, _ := os.UserHomeDir()
 	return Config{
 		NodeURL:    "http://127.0.0.1:8545",
 		Listen:     ":9338",
-		WalletPath: filepath.Join(home, ".shiva", "wallets", "default.json"),
+		WalletPath: filepath.Join(legacy.HomeDir(), "wallets", "default.json"),
 	}
 }
 
 func ConfigPath() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".shiva", "bridge.json")
+	return filepath.Join(legacy.HomeDir(), "bridge.json")
 }
 
 func LoadConfig(path string) (Config, error) {
@@ -53,24 +53,25 @@ func LoadConfig(path string) (Config, error) {
 	if cfg.WalletPath == "" {
 		cfg.WalletPath = DefaultConfig().WalletPath
 	}
+	cfg.WalletPath = legacy.RewriteText(cfg.WalletPath)
 	applyEnvOverrides(&cfg)
 	return cfg, nil
 }
 
 func applyEnvOverrides(cfg *Config) {
-	if v := os.Getenv("SHIVA_NODE_URL"); v != "" {
+	if v := legacy.EnvOrLegacy("ONEX_NODE_URL", "SHIVA_NODE_URL"); v != "" {
 		cfg.NodeURL = v
 	}
-	if v := os.Getenv("SHIVA_BRIDGE_LISTEN"); v != "" {
+	if v := legacy.EnvOrLegacy("ONEX_BRIDGE_LISTEN", "SHIVA_BRIDGE_LISTEN"); v != "" {
 		cfg.Listen = v
 	}
-	if v := os.Getenv("SHIVA_WALLET_PATH"); v != "" {
-		cfg.WalletPath = v
+	if v := legacy.EnvOrLegacy("ONEX_WALLET_PATH", "SHIVA_WALLET_PATH"); v != "" {
+		cfg.WalletPath = legacy.RewriteText(v)
 	}
-	if v := os.Getenv("SHIVA_PROJECT_ROOT"); v != "" {
+	if v := legacy.EnvOrLegacy("ONEX_PROJECT_ROOT", "SHIVA_PROJECT_ROOT"); v != "" {
 		cfg.ProjectRoot = v
 	}
-	if p := strings.TrimSpace(os.Getenv("PORT")); p != "" && os.Getenv("SHIVA_BRIDGE_LISTEN") == "" {
+	if p := strings.TrimSpace(os.Getenv("PORT")); p != "" && legacy.EnvOrLegacy("ONEX_BRIDGE_LISTEN", "SHIVA_BRIDGE_LISTEN") == "" {
 		cfg.Listen = ":" + strings.TrimPrefix(p, ":")
 	}
 	cfg.NodeURL = normalizeURL(cfg.NodeURL)

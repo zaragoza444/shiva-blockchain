@@ -11,6 +11,6 @@ $url = $BridgeUrl.Trim().TrimEnd('/')
 
 Copy-Item $src $cfg -Force
 $content = Get-Content $cfg -Raw
-$content = $content -replace "window\.__SHIVA_BRIDGE_DEPLOY__ = window\.__SHIVA_BRIDGE_DEPLOY__ \|\| '';", "window.__SHIVA_BRIDGE_DEPLOY__ = '$url';"
+$content = $content -replace "window\.__ONEX_BRIDGE_DEPLOY__ = window\.__ONEX_BRIDGE_DEPLOY__ \|\| '';", "window.__ONEX_BRIDGE_DEPLOY__ = '$url';"
 Set-Content -Path $cfg -Value $content -Encoding utf8 -NoNewline
 Write-Host "Updated $cfg with bridge $url"

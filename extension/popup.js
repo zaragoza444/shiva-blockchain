@@ -12,7 +12,7 @@ document.getElementById('save').addEventListener('click', async () => {
   const address = Array.from(pub).map(b => b.toString(16).padStart(2, '0')).join('');
   await chrome.storage.local.set({ rpcUrl, privateKey: keyHex, address });
   document.getElementById('addr').textContent = address;
-  alert('Connected. Refresh dApps using window.shiva');
+  alert('Connected. Refresh dApps using window.onex');
 });
 
 chrome.storage.local.get(['address', 'rpcUrl']).then(({ address, rpcUrl }) => {

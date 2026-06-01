@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shiva-blockchain/shiva/internal/types"
-	"github.com/shiva-blockchain/shiva/internal/wallet"
+	"github.com/onex-blockchain/onex/internal/types"
+	"github.com/onex-blockchain/onex/internal/wallet"
 )
 
 type Service struct {

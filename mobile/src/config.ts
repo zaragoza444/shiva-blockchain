@@ -1,13 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
-const STORAGE_KEY = 'shiva_wallet_url_override';
+const STORAGE_KEY = 'onex_wallet_url_override';
 
 export const DEFAULT_WALLET_URL =
   process.env.EXPO_PUBLIC_WALLET_URL?.trim() || 'http://127.0.0.1:9338/wallet/';
 
 export async function getWalletBaseUrl(): Promise<string> {
-  const override = await AsyncStorage.getItem(STORAGE_KEY);
+  let override = await AsyncStorage.getItem(STORAGE_KEY);
+  if (!override) {
+    override = await AsyncStorage.getItem('shiva_wallet_url_override');
+    if (override) await AsyncStorage.setItem(STORAGE_KEY, override);
+  }
   const base = (override?.trim() || DEFAULT_WALLET_URL).replace(/\/?$/, '/');
   return base;
 }

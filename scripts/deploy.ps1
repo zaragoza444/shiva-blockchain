@@ -1,7 +1,7 @@
 # Full deploy: commit check → GitHub push → Pages → Render instructions.
 param(
     [string]$GitHubUser = "zaragoza444",
-    [string]$RepoName = "shiva-blockchain",
+    [string]$RepoName = "onex-blockchain",
     [string]$BridgeUrl = ""
 )
 
@@ -9,7 +9,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
-Write-Host "=== Shiva deploy ===" -ForegroundColor Cyan
+Write-Host "=== OneX deploy ===" -ForegroundColor Cyan
 Write-Host ""
 
 if (git status --porcelain) {
@@ -25,8 +25,8 @@ Write-Host ""
 Write-Host "=== Render (bridge + node) ===" -ForegroundColor Cyan
 Write-Host "1. Open https://dashboard.render.com/blueprints"
 Write-Host "2. New Blueprint Instance → connect GitHub repo $GitHubUser/$RepoName"
-Write-Host "3. Apply render.yaml (creates shiva-node + shiva-bridge)"
-Write-Host "4. Copy shiva-bridge public URL when live"
+Write-Host "3. Apply render.yaml (creates onex-node + onex-bridge)"
+Write-Host "4. Copy onex-bridge public URL when live"
 Write-Host ""
 if (-not $BridgeUrl) {
     Write-Host "Then set bridge URL:" -ForegroundColor Yellow

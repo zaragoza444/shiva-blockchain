@@ -7,9 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/shiva-blockchain/shiva/internal/config"
-	"github.com/shiva-blockchain/shiva/internal/node"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/config"
+	"github.com/onex-blockchain/onex/internal/legacy"
+	"github.com/onex-blockchain/onex/internal/node"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 func main() {
@@ -26,7 +27,7 @@ func main() {
 	noExplorer := flag.Bool("no-explorer", false, "disable block explorer UI")
 	faucet := flag.Bool("faucet", false, "enable testnet faucet")
 	cors := flag.String("cors", "", "CORS allowed origins (comma-separated, default *)")
-	apiKey := flag.String("api-key", "", "API key for POST /api/v1/tx and /rpc (or SHIVA_API_KEY)")
+	apiKey := flag.String("api-key", "", "API key for POST /api/v1/tx and /rpc (or ONEX_API_KEY)")
 	noRPC := flag.Bool("no-rpc", false, "disable JSON-RPC /rpc endpoint")
 	flag.Parse()
 
@@ -57,14 +58,14 @@ func main() {
 		}
 		cfg.Seeds = s
 	}
-	cfg.FaucetKey = os.Getenv("SHIVA_FAUCET_PRIVATE_KEY")
-	cfg.CORSOrigins = config.ParseCORSOrigins(os.Getenv("SHIVA_CORS_ORIGINS"))
+	cfg.FaucetKey = legacy.EnvOrLegacy("ONEX_FAUCET_PRIVATE_KEY", "SHIVA_FAUCET_PRIVATE_KEY")
+	cfg.CORSOrigins = config.ParseCORSOrigins(legacy.EnvOrLegacy("ONEX_CORS_ORIGINS", "SHIVA_CORS_ORIGINS"))
 	if *cors != "" {
 		cfg.CORSOrigins = config.ParseCORSOrigins(*cors)
 	}
 	cfg.APIKey = *apiKey
 	if cfg.APIKey == "" {
-		cfg.APIKey = os.Getenv("SHIVA_API_KEY")
+		cfg.APIKey = legacy.EnvOrLegacy("ONEX_API_KEY", "SHIVA_API_KEY")
 	}
 	cfg.EnableRPC = !*noRPC
 

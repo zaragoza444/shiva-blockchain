@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/shiva-blockchain/shiva/internal/config"
-	"github.com/shiva-blockchain/shiva/internal/crypto"
-	"github.com/shiva-blockchain/shiva/internal/storage"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/config"
+	"github.com/onex-blockchain/onex/internal/crypto"
+	"github.com/onex-blockchain/onex/internal/storage"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 func TestFinalizeAndMineBlock(t *testing.T) {

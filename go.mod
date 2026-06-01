@@ -1,3 +1,3 @@
-module github.com/shiva-blockchain/shiva
+module github.com/onex-blockchain/onex
 
 go 1.21

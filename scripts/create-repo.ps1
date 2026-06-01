@@ -1,7 +1,7 @@
-# Create GitHub repo zaragoza444/shiva-blockchain and push main.
+# Create GitHub repo zaragoza444/onex-blockchain and push main.
 param(
     [string]$GitHubUser = "zaragoza444",
-    [string]$RepoName = "shiva-blockchain",
+    [string]$RepoName = "onex-blockchain",
     [ValidateSet("public", "private")]
     [string]$Visibility = "public"
 )
@@ -29,7 +29,7 @@ try {
 
 if (-not $exists) {
     Write-Host "Creating $repo ($Visibility) ..."
-    & $gh repo create $repo --$Visibility --description "Shiva blockchain: PoW node, wallet, DeFi bridge, Shiva Swap AMM" --source . --remote github
+    & $gh repo create $repo --$Visibility --description "OneX blockchain: PoW node, wallet, DeFi bridge, OneX Swap AMM" --source . --remote github
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 } else {
     Write-Host "Repo exists: https://github.com/$repo"

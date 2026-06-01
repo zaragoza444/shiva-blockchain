@@ -4,7 +4,7 @@ script.onload = () => script.remove();
 (document.head || document.documentElement).appendChild(script);
 
 window.addEventListener('message', async (event) => {
-  if (event.source !== window || !event.data || event.data.target !== 'shiva-content') return;
+  if (event.source !== window || !event.data || event.data.target !== 'onex-content') return;
   const { type, id, method, params } = event.data;
   if (type !== 'rpc') return;
 
@@ -18,14 +18,14 @@ window.addEventListener('message', async (event) => {
     });
     const j = await res.json();
     window.postMessage({
-      target: 'shiva-inpage',
+      target: 'onex-inpage',
       type: 'rpcResult',
       id,
       payload: j.error ? { error: j.error.message } : { result: j.result },
     }, '*');
   } catch (e) {
     window.postMessage({
-      target: 'shiva-inpage',
+      target: 'onex-inpage',
       type: 'rpcResult',
       id,
       payload: { error: e.message },
@@ -35,6 +35,6 @@ window.addEventListener('message', async (event) => {
 
 chrome.storage.local.get(['address']).then(({ address }) => {
   if (address) {
-    window.postMessage({ target: 'shiva-inpage', type: 'accounts', payload: [address] }, '*');
+    window.postMessage({ target: 'onex-inpage', type: 'accounts', payload: [address] }, '*');
   }
 });

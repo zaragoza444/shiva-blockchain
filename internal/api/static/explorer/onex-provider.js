@@ -1,6 +1,6 @@
-// EIP-1193-style provider for Shiva (Ed25519). Use with Shiva Wallet extension or in-page wallet.
+// EIP-1193-style provider for OneX (Ed25519). Use with OneX Wallet extension or in-page wallet.
 (function () {
-  if (window.shiva) return;
+  if (window.onex) return;
 
   const listeners = new Map();
   let selectedAddress = null;
@@ -23,7 +23,7 @@
   }
 
   const provider = {
-    isShiva: true,
+    isOneX: true,
     isMetaMask: false,
     selectedAddress: null,
 
@@ -40,44 +40,44 @@
 
     async request({ method, params = [] }) {
       switch (method) {
-        case 'shiva_requestAccounts':
+        case 'onex_requestAccounts':
         case 'eth_requestAccounts': {
-          const addr = window.__shivaWalletAddress;
-          if (!addr) throw new Error('No Shiva wallet connected — open Wallet tab or install Shiva Wallet extension');
+          const addr = window.__onexWalletAddress;
+          if (!addr) throw new Error('No OneX wallet connected — open Wallet tab or install OneX Wallet extension');
           selectedAddress = addr;
           provider.selectedAddress = addr;
           emit('accountsChanged', [addr]);
           return [addr];
         }
-        case 'shiva_accounts':
+        case 'onex_accounts':
         case 'eth_accounts':
-          return selectedAddress || window.__shivaWalletAddress ? [selectedAddress || window.__shivaWalletAddress] : [];
-        case 'shiva_getBalance':
+          return selectedAddress || window.__onexWalletAddress ? [selectedAddress || window.__onexWalletAddress] : [];
+        case 'onex_getBalance':
         case 'eth_getBalance': {
           const addr = params[0] || selectedAddress;
-          const r = await rpc('shiva_getBalance', [addr]);
+          const r = await rpc('onex_getBalance', [addr]);
           return method.startsWith('eth_') ? '0x' + (r.balance || 0).toString(16) : r;
         }
-        case 'shiva_getTransactionCount':
+        case 'onex_getTransactionCount':
         case 'eth_getTransactionCount': {
           const addr = params[0] || selectedAddress;
           return rpc(method, [addr]);
         }
         case 'eth_chainId':
           return rpc('eth_chainId', []);
-        case 'shiva_chainId':
-          return rpc('shiva_chainId', []);
-        case 'shiva_sendTransaction': {
+        case 'onex_chainId':
+          return rpc('onex_chainId', []);
+        case 'onex_sendTransaction': {
           const tx = params[0];
-          if (!tx.signature && window.__shivaSignTransaction) {
-            await window.__shivaSignTransaction(tx);
+          if (!tx.signature && window.__onexSignTransaction) {
+            await window.__onexSignTransaction(tx);
           }
-          return rpc('shiva_sendTransaction', [tx]);
+          return rpc('onex_sendTransaction', [tx]);
         }
         case 'wallet_addEthereumChain': {
           const chain = params[0];
           if (!window.ethereum || !window.ethereum.request) {
-            throw new Error('MetaMask not detected. Shiva uses Ed25519 — use the built-in Shiva Wallet instead.');
+            throw new Error('MetaMask not detected. OneX uses Ed25519 — use the built-in OneX Wallet instead.');
           }
           return window.ethereum.request({ method: 'wallet_addEthereumChain', params: [chain] });
         }
@@ -87,5 +87,5 @@
     },
   };
 
-  window.shiva = provider;
+  window.onex = provider;
 })();

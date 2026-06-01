@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/shiva-blockchain/shiva/internal/ai"
+	"github.com/onex-blockchain/onex/internal/ai"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	st, _ := httpGet(base + statusPath)
-	fmt.Println("Shiva AI —", string(st))
+	fmt.Println("OneX AI —", string(st))
 	fmt.Println("Type a question (empty line to exit).")
 
 	sc := bufio.NewScanner(os.Stdin)

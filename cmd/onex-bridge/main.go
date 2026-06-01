@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/shiva-blockchain/shiva/internal/bridge"
+	"github.com/onex-blockchain/onex/internal/bridge"
 )
 
 func main() {
-	configPath := flag.String("config", "", "bridge config JSON (default ~/.shiva/bridge.json)")
-	nodeURL := flag.String("node", "", "Shiva node API URL")
+	configPath := flag.String("config", "", "bridge config JSON (default ~/.onex/bridge.json)")
+	nodeURL := flag.String("node", "", "OneX node API URL")
 	listen := flag.String("listen", "", "bridge listen address")
 	walletPath := flag.String("wallet", "", "wallet JSON file path")
 	flag.Parse()
@@ -48,7 +48,7 @@ func main() {
 	}
 	if err := b.Node().Ping(); err != nil {
 		log.Printf("bridge: warning — node not reachable at %s: %v", cfg.NodeURL, err)
-		log.Printf("bridge: start the node first (run-shiva.bat)")
+		log.Printf("bridge: start the node first (run-onex.bat)")
 	} else {
 		st, _ := b.Node().Status()
 		if st != nil {

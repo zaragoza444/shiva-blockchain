@@ -1,11 +1,11 @@
-# Publish Shiva Wallet (Android & iOS)
+# Publish OneX Wallet (Android & iOS)
 
 ## Prerequisites
 
 - [Expo account](https://expo.dev) and EAS CLI: `npm i -g eas-cli`
 - **Apple Developer** + **Google Play Console** (you indicated both are ready)
 - Production wallet URL: `https://YOUR_DOMAIN/wallet/` (see [DEPLOY.md](../DEPLOY.md))
-- **GitHub Pages UI**: `https://zaragoza444.github.io/shiva-blockchain/wallet/` + bridge URL in [docs/wallet/config.js](../docs/wallet/config.js) (see [docs/HOSTING.md](../docs/HOSTING.md))
+- **GitHub Pages UI**: `https://zaragoza444.github.io/onex-blockchain/wallet/` + bridge URL in [docs/wallet/config.js](../docs/wallet/config.js) (see [docs/HOSTING.md](../docs/HOSTING.md))
 
 ## 1. Configure
 
@@ -42,8 +42,8 @@ eas build --platform android --profile preview
 
 ## 3. Google Play
 
-1. Play Console → Create app → **Shiva Wallet**
-2. Package name: `com.shiva.wallet` (must match `app.json`)
+1. Play Console → Create app → **OneX Wallet**
+2. Package name: `com.onex.wallet` (must match `app.json`)
 3. Upload **AAB** from EAS build
 4. Complete: privacy policy URL, Data safety (network used), content rating
 5. Internal testing track → promote to production
@@ -54,7 +54,7 @@ eas submit --platform android --profile production
 
 ## 4. Apple App Store
 
-1. App Store Connect → New app → bundle ID `com.shiva.wallet`
+1. App Store Connect → New app → bundle ID `com.onex.wallet`
 2. Upload **IPA** from EAS (or `eas submit --platform ios`)
 3. App Privacy: WebView loads your wallet URL; declare network use
 4. Export compliance: standard encryption exemption if applicable
@@ -66,15 +66,15 @@ eas submit --platform ios --profile production
 
 ## 5. Deep links
 
-- `shivawallet://swap` → Swap tab
-- `shivawallet://ai` → AI tab
-- `shivawallet://earn` → Earn tab
+- `onexwallet://swap` → Swap tab
+- `onexwallet://ai` → AI tab
+- `onexwallet://earn` → Earn tab
 
 ## 6. Backend checklist
 
 - TLS on `YOUR_DOMAIN`
-- `SHIVA_CORS_ORIGINS=https://YOUR_DOMAIN`
-- `SHIVA_API_KEY` set for write endpoints
+- `ONEX_CORS_ORIGINS=https://YOUR_DOMAIN`
+- `ONEX_API_KEY` set for write endpoints
 - `docker compose -f docker-compose.prod.yml --profile proxy up -d`
 
 ## Local dev
@@ -85,4 +85,4 @@ eas submit --platform ios --profile production
 | Android emulator | `http://10.0.2.2:9338/wallet/` |
 | Physical device (LAN) | `http://YOUR_PC_IP:9338/wallet/` |
 
-Run bridge: `run-shiva-wallet.bat` from repo root.
+Run bridge: `run-onex-wallet.bat` from repo root.

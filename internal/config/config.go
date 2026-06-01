@@ -4,11 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/types"
+	"github.com/onex-blockchain/onex/internal/legacy"
 )
+
+func init() {
+	legacy.EnsureHomeMigrated()
+}
 
 type NodeConfig struct {
 	DataDir      string
@@ -45,7 +49,7 @@ func LoadGenesis(path string) (*types.GenesisConfig, error) {
 		g.Difficulty = 3
 	}
 	if g.Reward == 0 {
-		g.Reward = 50 * 100000000 // 50 SHIVA
+		g.Reward = 50 * 100000000 // 50 ONEX
 	}
 	if g.NetworkID == 0 {
 		if strings.Contains(strings.ToLower(g.ChainID), "testnet") {
@@ -70,11 +74,7 @@ func LoadSeeds(path string) ([]string, error) {
 }
 
 func DefaultDataDir() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "./data"
-	}
-	return filepath.Join(home, ".shiva")
+	return legacy.HomeDir()
 }
 
 func ResolveGenesis(genesisFlag string) string {

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shiva — Explorer & Wallet</title>
+  <title>OneX — Explorer & Wallet</title>
   <script src="https://cdn.jsdelivr.net/npm/@noble/ed25519@2.1.0/+esm" type="module"></script>
-  <script src="shiva-provider.js" defer></script>
+  <script src="onex-provider.js" defer></script>
   <style>
     :root { --bg: #0a0e14; --card: #141b26; --accent: #00e5b0; --accent2: #7c5cff; --text: #eef2f8; --muted: #7d8da6; --danger: #ff6b6b; }
     * { box-sizing: border-box; }
@@ -39,7 +39,7 @@
 </head>
 <body>
   <header>
-    <h1>Shiva Blockchain</h1>
+    <h1>OneX Blockchain</h1>
     <nav>
       <button type="button" class="active" data-tab="explorer">Explorer</button>
       <button type="button" data-tab="wallet">Wallet</button>
@@ -59,7 +59,7 @@
       <div id="faucet-box" style="margin-top:2rem;display:none">
         <h2>Testnet faucet</h2>
         <input id="faucet-addr" placeholder="Your 64-char address" />
-        <button type="button" class="primary" onclick="drip()">Request SHIVA</button>
+        <button type="button" class="primary" onclick="drip()">Request ONEX</button>
         <div class="msg" id="faucet-msg"></div>
       </div>
     </section>
@@ -67,7 +67,7 @@
     <section id="panel-wallet" class="panel">
       <div class="card" style="margin-bottom:1.5rem">
         <span class="badge">MetaMask-style</span>
-        <p class="msg" style="margin-top:0.75rem">Shiva uses <strong>Ed25519</strong> (64-char addresses), not Ethereum accounts. Use this wallet or the <strong>Shiva Wallet</strong> browser extension — standard MetaMask cannot sign Shiva transactions.</p>
+        <p class="msg" style="margin-top:0.75rem">OneX uses <strong>Ed25519</strong> (64-char addresses), not Ethereum accounts. Use this wallet or the <strong>OneX Wallet</strong> browser extension — standard MetaMask cannot sign OneX transactions.</p>
       </div>
 
       <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem">
@@ -80,7 +80,7 @@
           <p class="msg" id="wallet-msg"></p>
         </div>
         <div class="card">
-          <h3>Send SHIVA</h3>
+          <h3>Send ONEX</h3>
           <input id="send-to" placeholder="To address (64 hex)" />
           <input id="send-amount" placeholder="Amount e.g. 10.5" />
           <input id="send-fee" placeholder="Fee (default 0.001)" value="0.001" />
@@ -94,7 +94,7 @@
         <div class="val" id="wallet-balance">—</div>
         <button type="button" class="secondary" style="margin-top:0.75rem" onclick="refreshBalance()">Refresh</button>
         <button type="button" class="secondary" onclick="copyAddress()">Copy address</button>
-        <button type="button" class="secondary" onclick="installExtensionHint()">Shiva Wallet extension</button>
+        <button type="button" class="secondary" onclick="installExtensionHint()">OneX Wallet extension</button>
       </div>
     </section>
   </main>
@@ -102,7 +102,7 @@
   <script type="module">
     import * as ed from 'https://cdn.jsdelivr.net/npm/@noble/ed25519@2.1.0/+esm';
 
-    const STORAGE_KEY = 'shiva_wallet_v1';
+    const STORAGE_KEY = 'onex_wallet_v1';
     let wallet = null; // { address, privateKey }
 
     function bytesToHex(b) {
@@ -129,7 +129,7 @@
       const v = BigInt(n);
       const whole = v / 100000000n;
       const frac = (v % 100000000n).toString().padStart(8, '0');
-      return `${whole}.${frac} SHIVA`;
+      return `${whole}.${frac} ONEX`;
     }
 
     function saveWallet() {
@@ -146,15 +146,15 @@
       updateUI();
     }
     function syncProvider() {
-      window.__shivaWalletAddress = wallet?.address || null;
-      window.__shivaSignTransaction = wallet ? async (tx) => {
+      window.__onexWalletAddress = wallet?.address || null;
+      window.__onexSignTransaction = wallet ? async (tx) => {
         const priv = hexToBytes(wallet.privateKey);
         const sig = await ed.signAsync(txPayload(tx), priv);
         tx.from = wallet.address;
         tx.signature = bytesToHex(sig);
       } : null;
-      if (window.shiva) {
-        window.shiva.selectedAddress = wallet?.address || null;
+      if (window.onex) {
+        window.onex.selectedAddress = wallet?.address || null;
       }
       document.getElementById('connect-status').textContent = wallet
         ? `Connected: ${wallet.address.slice(0, 12)}…`
@@ -192,7 +192,7 @@
         return;
       }
       syncProvider();
-      if (window.shiva) window.shiva.request({ method: 'shiva_requestAccounts' }).catch(() => {});
+      if (window.onex) window.onex.request({ method: 'onex_requestAccounts' }).catch(() => {});
     };
 
     window.refreshBalance = async function () {
@@ -209,7 +209,7 @@
         const fee = Number(parseAmount(document.getElementById('send-fee').value || '0.001'));
         const bal = await fetch(`/api/v1/balance/${wallet.address}`).then(x => x.json());
         const tx = { from: wallet.address, to, amount, fee, nonce: bal.nonce, signature: '' };
-        await window.__shivaSignTransaction(tx);
+        await window.__onexSignTransaction(tx);
         const res = await fetch('/api/v1/tx', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

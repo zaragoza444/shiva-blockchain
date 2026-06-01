@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Assistant answers questions about Shiva chain and wallet.
+// Assistant answers questions about OneX chain and wallet.
 type Assistant struct {
 	cfg Config
 }
@@ -28,7 +28,7 @@ func (a *Assistant) Status() map[string]interface{} {
 func (a *Assistant) Chat(req ChatRequest) ChatResponse {
 	user := lastUserMessage(req.Messages)
 	if user == "" {
-		return ChatResponse{Reply: "Send a message to Shiva AI.", Mode: "local"}
+		return ChatResponse{Reply: "Send a message to OneX AI.", Mode: "local"}
 	}
 
 	if a.cfg.CloudAvailable() {

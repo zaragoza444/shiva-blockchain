@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shiva-blockchain/shiva/internal/rpc"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/legacy"
+	"github.com/onex-blockchain/onex/internal/rpc"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 func (b *Bridge) projectRoot() string {
@@ -22,8 +23,7 @@ func (b *Bridge) projectRoot() string {
 			return abs
 		}
 	}
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".shiva")
+	return legacy.HomeDir()
 }
 
 func (b *Bridge) registry() *Registry {
@@ -35,13 +35,12 @@ func (b *Bridge) registry() *Registry {
 
 func (b *Bridge) portfolio() *PortfolioStore {
 	if b.store == nil {
-		home, _ := os.UserHomeDir()
-		b.store = NewPortfolioStore(filepath.Join(home, ".shiva", "portfolios"))
+		b.store = NewPortfolioStore(filepath.Join(legacy.HomeDir(), "portfolios"))
 	}
 	return b.store
 }
 
-func (b *Bridge) syncShivaBalance(p *Portfolio) error {
+func (b *Bridge) syncOneXBalance(p *Portfolio) error {
 	if err := b.EnsureWallet(); err != nil {
 		return err
 	}
@@ -52,7 +51,7 @@ func (b *Bridge) syncShivaBalance(p *Portfolio) error {
 	if err != nil {
 		return err
 	}
-	p.SetBalance(b.registry().TokenKey("shiva-mainnet-1", "SHIVA"), bal)
+	p.SetBalance(b.registry().TokenKey("onex-mainnet-1", "ONEX"), bal)
 	return nil
 }
 
@@ -70,7 +69,7 @@ func (b *Bridge) GetPortfolio() (*Portfolio, error) {
 	if err != nil {
 		return nil, err
 	}
-	_ = b.syncShivaBalance(p)
+	_ = b.syncOneXBalance(p)
 	_ = b.portfolio().Save(p)
 	return p, nil
 }
@@ -95,12 +94,12 @@ func (b *Bridge) DepositInfo(chainID string) (map[string]interface{}, error) {
 	out := map[string]interface{}{
 		"chain":           chain,
 		"depositAddress":  DepositAddress(addr, chainID),
-		"shivaAddress":    addr,
+		"onexAddress":    addr,
 		"note":            "Cross-chain deposits are credited to your portfolio after bridge confirmation.",
 	}
-	if chain.Type == "shiva" {
+	if chain.Type == "onex" {
 		out["depositAddress"] = addr
-		out["note"] = "Send SHIVA directly to your Shiva address on-chain."
+		out["note"] = "Send ONEX directly to your OneX address on-chain."
 	}
 	return out, nil
 }
@@ -124,7 +123,7 @@ func (b *Bridge) RecordDeposit(chainID, tokenID, amountStr, txHash string) (*Dep
 		Status: "pending", CreatedAt: nowUnix(),
 	}
 	for _, c := range b.registry().GetChains() {
-		if c.ID == chainID && c.Type == "shiva" {
+		if c.ID == chainID && c.Type == "onex" {
 			rec.Status = "confirmed"
 			p.AddBalance(key, amt)
 			break
@@ -142,7 +141,7 @@ func (b *Bridge) SwapQuote(fromChain, fromToken, toChain, toToken, amountStr str
 	fromKey := b.registry().TokenKey(fromChain, fromToken)
 	toKey := b.registry().TokenKey(toChain, toToken)
 	if _, ok := b.ammStore().FindPool(fromKey, toKey); ok {
-		return b.ShivaSwapQuote(fromKey, toKey, amountStr)
+		return b.OneXSwapQuote(fromKey, toKey, amountStr)
 	}
 	amt, err := rpc.ParseAmount(amountStr)
 	if err != nil {
@@ -167,7 +166,7 @@ func (b *Bridge) SwapExecute(fromChain, fromToken, toChain, toToken, amountStr s
 	fromKey := b.registry().TokenKey(fromChain, fromToken)
 	toKey := b.registry().TokenKey(toChain, toToken)
 	if _, ok := b.ammStore().FindPool(fromKey, toKey); ok {
-		res, err := b.ShivaSwapExecute(fromKey, toKey, amountStr, 50)
+		res, err := b.OneXSwapExecute(fromKey, toKey, amountStr, 50)
 		if err != nil {
 			return nil, err
 		}
@@ -334,7 +333,7 @@ func (b *Bridge) RepayLoan(id string) error {
 }
 
 func (b *Bridge) SendToken(chainID, tokenID, toAddr, amountStr, feeStr string) (map[string]string, error) {
-	if chainID == "shiva-mainnet-1" && tokenID == "SHIVA" {
+	if chainID == "onex-mainnet-1" && tokenID == "ONEX" {
 		amount, err := rpc.ParseAmount(amountStr)
 		if err != nil {
 			return nil, err

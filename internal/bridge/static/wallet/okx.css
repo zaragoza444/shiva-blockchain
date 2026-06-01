@@ -1,4 +1,4 @@
-/* OKX Wallet–inspired theme for Shiva Wallet */
+/* OKX Wallet–inspired theme for OneX Wallet */
 :root {
   --bg: #000000;
   --bg-elevated: #121212;
@@ -728,16 +728,16 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-secondary);
 }
 
-/* Mobile WebView (Shiva Wallet app) */
-html.shiva-mobile .topbar-right .icon-btn[title="Settings"] {
+/* Mobile WebView (OneX Wallet app) */
+html.onex-mobile .topbar-right .icon-btn[title="Settings"] {
   display: none;
 }
 
-html.shiva-mobile .bottom-nav button {
+html.onex-mobile .bottom-nav button {
   font-size: 8px;
 }
 
-html.shiva-mobile .quick-action-icon {
+html.onex-mobile .quick-action-icon {
   min-width: 48px;
   min-height: 48px;
 }
@@ -832,7 +832,7 @@ html.shiva-mobile .quick-action-icon {
 
 .settings-row span { font-weight: 500; }
 
-/* Shiva AI */
+/* OneX AI */
 .ai-header {
   display: flex;
   align-items: center;

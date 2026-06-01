@@ -1,0 +1,26 @@
+[Unit]
+Description=OneX blockchain node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=onex
+Group=onex
+WorkingDirectory=/opt/onex
+ExecStart=/opt/onex/bin/onexd \
+  -datadir /var/lib/onex \
+  -genesis /opt/onex/configs/genesis.json \
+  -seeds /opt/onex/configs/seeds-mainnet.json \
+  -api :8545 \
+  -listen :30303 \
+  -tls-cert /etc/onex/tls/fullchain.pem \
+  -tls-key /etc/onex/tls/privkey.pem
+Environment=ONEX_CORS_ORIGINS=https://your-domain.com
+EnvironmentFile=-/etc/onex/onex.env
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

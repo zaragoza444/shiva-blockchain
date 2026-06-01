@@ -1,7 +1,7 @@
 # One-shot: GitHub login (if needed), create repo, push. Optional Gitea mirror.
 param(
     [string]$GitHubUser = "zaragoza444",
-    [string]$RepoName = "shiva-blockchain",
+    [string]$RepoName = "onex-blockchain",
     [string]$GiteaUrl = ""
 )
 
@@ -24,7 +24,7 @@ $repo = "${GitHubUser}/${RepoName}"
 $exists = & $gh repo view $repo 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Creating GitHub repo $repo ..."
-    & $gh repo create $repo --public --description "Shiva blockchain: PoW node, OKX-style wallet, DeFi bridge, Shiva Swap AMM" --source . --remote github --push
+    & $gh repo create $repo --public --description "OneX blockchain: PoW node, OKX-style wallet, DeFi bridge, OneX Swap AMM" --source . --remote github --push
 } else {
     git remote remove github 2>$null
     git remote add github "https://github.com/${repo}.git"

@@ -7,8 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/shiva-blockchain/shiva/internal/crypto"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/crypto"
+	"github.com/onex-blockchain/onex/internal/legacy"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 type Wallet struct {
@@ -97,13 +98,12 @@ func ImportPrivate(hexKey string) (*Wallet, error) {
 }
 
 func DefaultWalletPath(name string) string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".shiva", "wallets", name+".json")
+	return filepath.Join(legacy.HomeDir(), "wallets", name+".json")
 }
 
 func FormatBalance(atomic uint64) string {
 	const unit = 100000000
 	whole := atomic / unit
 	frac := atomic % unit
-	return fmt.Sprintf("%d.%08d SHIVA", whole, frac)
+	return fmt.Sprintf("%d.%08d ONEX", whole, frac)
 }

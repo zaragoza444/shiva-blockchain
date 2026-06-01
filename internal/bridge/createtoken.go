@@ -9,7 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/shiva-blockchain/shiva/internal/rpc"
+	"github.com/onex-blockchain/onex/internal/legacy"
+	"github.com/onex-blockchain/onex/internal/rpc"
 )
 
 type CustomToken struct {
@@ -30,8 +31,7 @@ type customTokenStore struct {
 
 func (b *Bridge) customTokens() *customTokenStore {
 	if b.custom == nil {
-		home, _ := os.UserHomeDir()
-		b.custom = &customTokenStore{path: filepath.Join(home, ".shiva", "custom-tokens.json")}
+		b.custom = &customTokenStore{path: filepath.Join(legacy.HomeDir(), "custom-tokens.json")}
 	}
 	return b.custom
 }

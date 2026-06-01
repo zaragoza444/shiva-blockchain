@@ -10,14 +10,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/shiva-blockchain/shiva/internal/api"
-	"github.com/shiva-blockchain/shiva/internal/chain"
-	"github.com/shiva-blockchain/shiva/internal/config"
-	"github.com/shiva-blockchain/shiva/internal/faucet"
-	"github.com/shiva-blockchain/shiva/internal/mempool"
-	"github.com/shiva-blockchain/shiva/internal/network"
-	"github.com/shiva-blockchain/shiva/internal/storage"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/api"
+	"github.com/onex-blockchain/onex/internal/chain"
+	"github.com/onex-blockchain/onex/internal/config"
+	"github.com/onex-blockchain/onex/internal/faucet"
+	"github.com/onex-blockchain/onex/internal/mempool"
+	"github.com/onex-blockchain/onex/internal/network"
+	"github.com/onex-blockchain/onex/internal/storage"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 type Node struct {
@@ -114,7 +114,7 @@ func New(cfg *config.NodeConfig) (*Node, error) {
 }
 
 func (n *Node) Run() error {
-	log.Printf("shivad: chain=%s height=%d data=%s", n.bc.ChainID(), n.bc.Height(), n.cfg.DataDir)
+	log.Printf("onexd: chain=%s height=%d data=%s", n.bc.ChainID(), n.bc.Height(), n.cfg.DataDir)
 	return n.api.Start()
 }
 

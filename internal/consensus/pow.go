@@ -3,8 +3,8 @@ package consensus
 import (
 	"strings"
 
-	"github.com/shiva-blockchain/shiva/internal/crypto"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/crypto"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 func MineBlock(b *types.Block) {

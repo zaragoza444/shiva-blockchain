@@ -8,11 +8,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/shiva-blockchain/shiva/internal/chain"
-	"github.com/shiva-blockchain/shiva/internal/crypto"
-	"github.com/shiva-blockchain/shiva/internal/mempool"
-	"github.com/shiva-blockchain/shiva/internal/network"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/chain"
+	"github.com/onex-blockchain/onex/internal/crypto"
+	"github.com/onex-blockchain/onex/internal/mempool"
+	"github.com/onex-blockchain/onex/internal/network"
+	"github.com/onex-blockchain/onex/internal/types"
+	"github.com/onex-blockchain/onex/internal/legacy"
 )
 
 type Handler struct {
@@ -91,16 +92,17 @@ func (h *Handler) dispatch(req request) response {
 }
 
 func (h *Handler) call(method string, params json.RawMessage) (interface{}, error) {
+	method = legacy.NormalizeRPCMethod(method)
 	switch method {
-	case "shiva_chainId":
+	case "onex_chainId":
 		return h.bc.ChainID(), nil
-	case "shiva_getNetworkId", "net_version":
+	case "onex_getNetworkId", "net_version":
 		return fmt.Sprintf("%d", h.bc.NetworkID()), nil
 	case "eth_chainId":
 		return fmt.Sprintf("0x%x", h.bc.NetworkID()), nil
 	case "web3_clientVersion":
-		return "Shiva/1.0", nil
-	case "shiva_getBalance", "eth_getBalance":
+		return "OneX/1.0", nil
+	case "onex_getBalance", "eth_getBalance":
 		var args []string
 		if err := json.Unmarshal(params, &args); err != nil || len(args) < 1 {
 			return nil, fmt.Errorf("address required")
@@ -118,7 +120,7 @@ func (h *Handler) call(method string, params json.RawMessage) (interface{}, erro
 			"balance": bal,
 			"nonce":   h.bc.Nonce(addr),
 		}, nil
-	case "shiva_getTransactionCount", "eth_getTransactionCount":
+	case "onex_getTransactionCount", "eth_getTransactionCount":
 		var args []string
 		if err := json.Unmarshal(params, &args); err != nil || len(args) < 1 {
 			return nil, fmt.Errorf("address required")
@@ -129,7 +131,7 @@ func (h *Handler) call(method string, params json.RawMessage) (interface{}, erro
 			return fmt.Sprintf("0x%x", n), nil
 		}
 		return n, nil
-	case "shiva_sendTransaction", "eth_sendTransaction":
+	case "onex_sendTransaction", "eth_sendTransaction":
 		var tx types.Transaction
 		if err := json.Unmarshal(params, &tx); err == nil && tx.To != "" {
 			return h.submitTx(&tx)
@@ -141,7 +143,7 @@ func (h *Handler) call(method string, params json.RawMessage) (interface{}, erro
 			return nil, fmt.Errorf("invalid transaction params")
 		}
 		return h.submitTx(&wrapped.Tx)
-	case "shiva_sendRawTransaction":
+	case "onex_sendRawTransaction":
 		var args []string
 		if err := json.Unmarshal(params, &args); err != nil || len(args) < 1 {
 			return nil, fmt.Errorf("signed tx json required")
@@ -187,7 +189,7 @@ func writeErr(w http.ResponseWriter, id json.RawMessage, code int, msg string) {
 	})
 }
 
-// ParseAmount converts decimal SHIVA string to atomic units (8 decimals).
+// ParseAmount converts decimal ONEX string to atomic units (8 decimals).
 func ParseAmount(s string) (uint64, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {

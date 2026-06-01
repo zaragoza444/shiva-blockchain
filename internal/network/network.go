@@ -11,8 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shiva-blockchain/shiva/internal/chain"
-	"github.com/shiva-blockchain/shiva/internal/types"
+	"github.com/onex-blockchain/onex/internal/chain"
+	"github.com/onex-blockchain/onex/internal/legacy"
+	"github.com/onex-blockchain/onex/internal/types"
 )
 
 const protoVersion = 1
@@ -169,7 +170,7 @@ func (s *Server) handshake(conn net.Conn, addr string) error {
 		conn.Close()
 		return err
 	}
-	if remote.ChainID != s.chainID {
+	if remote.ChainID != s.chainID && !chainCompatible(remote.ChainID, s.chainID) {
 		conn.Close()
 		return fmt.Errorf("chain id mismatch")
 	}
@@ -300,4 +301,8 @@ func writeMsg(w io.Writer, m Message) error {
 	data = append(data, '\n')
 	_, err = w.Write(data)
 	return err
+}
+
+func chainCompatible(a, b string) bool {
+	return legacy.NormalizeChainID(a) == legacy.NormalizeChainID(b)
 }

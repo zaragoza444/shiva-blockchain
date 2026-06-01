@@ -24,9 +24,9 @@ jobs:
             os=$1 arch=$2
             ext=""
             [ "$os" = "windows" ] && ext=".exe"
-            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -ldflags="-s -w" -o "dist/shivad-${os}-${arch}${ext}" ./cmd/shivad
-            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -ldflags="-s -w" -o "dist/shiva-${os}-${arch}${ext}" ./cmd/shiva
-            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -ldflags="-s -w" -o "dist/shiva-bridge-${os}-${arch}${ext}" ./cmd/shiva-bridge
+            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -ldflags="-s -w" -o "dist/onexd-${os}-${arch}${ext}" ./cmd/onexd
+            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -ldflags="-s -w" -o "dist/onex-${os}-${arch}${ext}" ./cmd/onex
+            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -ldflags="-s -w" -o "dist/onex-bridge-${os}-${arch}${ext}" ./cmd/onex-bridge
           done
           cd dist && sha256sum * > SHA256SUMS
       - uses: softprops/action-gh-release@v2

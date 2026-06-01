@@ -1,7 +1,7 @@
 // Read-only catalog when wallet UI is hosted without bridge (GitHub Pages preview).
-window.SHIVA_FALLBACK = {
+window.ONEX_FALLBACK = {
   chains: [
-    { id: 'shiva-mainnet-1', name: 'Shiva', symbol: 'SHIVA', color: '#00e5b0', type: 'shiva' },
+    { id: 'onex-mainnet-1', name: 'OneX', symbol: 'ONEX', color: '#00e5b0', type: 'onex' },
     { id: 'ethereum', name: 'Ethereum', symbol: 'ETH', color: '#627eea', type: 'evm' },
     { id: 'bsc', name: 'BNB Chain', symbol: 'BNB', color: '#f3ba2f', type: 'evm' },
     { id: 'polygon', name: 'Polygon', symbol: 'MATIC', color: '#8247e5', type: 'evm' },
@@ -10,7 +10,7 @@ window.SHIVA_FALLBACK = {
     { id: 'alltra', name: 'ALLTRA', symbol: 'ALL', color: '#c0a062', type: 'evm' },
   ],
   tokens: [
-    { id: 'SHIVA', chainId: 'shiva-mainnet-1', symbol: 'SHIVA', decimals: 8 },
+    { id: 'ONEX', chainId: 'onex-mainnet-1', symbol: 'ONEX', decimals: 8 },
     { id: 'ETH', chainId: 'ethereum', symbol: 'ETH', decimals: 18 },
     { id: 'USDT', chainId: 'ethereum', symbol: 'USDT', decimals: 6 },
     { id: 'USDC', chainId: 'ethereum', symbol: 'USDC', decimals: 6 },
@@ -18,8 +18,8 @@ window.SHIVA_FALLBACK = {
     { id: 'MATIC', chainId: 'polygon', symbol: 'MATIC', decimals: 18 },
     { id: 'BTC', chainId: 'bitcoin', symbol: 'BTC', decimals: 8 },
     { id: 'SOL', chainId: 'solana', symbol: 'SOL', decimals: 9 },
-    { id: 'wSHIVA', chainId: 'shiva-mainnet-1', symbol: 'wSHIVA', decimals: 8 },
-    { id: 'sSHIVA', chainId: 'shiva-mainnet-1', symbol: 'sSHIVA', decimals: 8 },
+    { id: 'wONEX', chainId: 'onex-mainnet-1', symbol: 'wONEX', decimals: 8 },
+    { id: 'sONEX', chainId: 'onex-mainnet-1', symbol: 'sONEX', decimals: 8 },
     { id: 'ALL', chainId: 'alltra', symbol: 'ALL', decimals: 18 },
   ],
 };
