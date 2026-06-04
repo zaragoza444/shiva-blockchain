@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "wrapPrefix": "w",
+  "hubChainId": "onex-mainnet-1",
+  "deployFeeOnex": "0.01",
+  "chainNotes": {
+    "onex": "Native OneX token registry - instant portfolio credit",
+    "evm": "ERC-20 deploy metadata for Ethereum, BSC, Polygon, Arbitrum, Optimism, Avalanche, Base, ALLTRA",
+    "solana": "SPL mint metadata for Solana mainnet",
+    "btc": "Bitcoin asset reference (Omni-style catalog entry)",
+    "tron": "TRC-20 compatible metadata for TRON"
+  }
+}

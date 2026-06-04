@@ -12,6 +12,9 @@ const currentHome = ".onex"
 
 // HomeDir returns the OneX user data directory (~/.onex).
 func HomeDir() string {
+	if v := strings.TrimSpace(os.Getenv("ONEX_HOME_DIR")); v != "" {
+		return v
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ".onex"
@@ -21,6 +24,10 @@ func HomeDir() string {
 
 // EnsureHomeMigrated copies ~/.shiva to ~/.onex when the new directory is missing.
 func EnsureHomeMigrated() {
+	// If we use an explicit home dir (Docker/Render), migration is not needed.
+	if v := strings.TrimSpace(os.Getenv("ONEX_HOME_DIR")); v != "" {
+		return
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return

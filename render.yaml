@@ -40,3 +40,9 @@ services:
         value: https://git.anakatech.llc,https://zaragoza444.github.io
       - key: ONEX_PROJECT_ROOT
         value: /app
+      - key: ONEX_HOME_DIR
+        value: /bridge-data
+      - key: ONEX_API_KEY
+        sync: false
+      - key: ONEX_CORS_ORIGINS
+        value: https://git.anakatech.llc,https://zaragoza444.github.io

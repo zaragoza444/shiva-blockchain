@@ -2,6 +2,8 @@
 
 Run OneX blockchain + OKX-style wallet bridge on a server (Docker or systemd).
 
+**Domain `novatrustee.digital`:** [deploy/DEPLOY-novatrustee.digital.md](deploy/DEPLOY-novatrustee.digital.md), `scripts/deploy-vps-novatrustee.sh` (VPS), `scripts/deploy-vps-novatrustee.ps1` (preflight from Windows).
+
 ## Docker (recommended)
 
 ```bash

@@ -7,19 +7,21 @@ import (
 	"sync"
 
 	"github.com/onex-blockchain/onex/internal/bridge/amm"
+	"github.com/onex-blockchain/onex/internal/bridge/tokenplatform"
 	"github.com/onex-blockchain/onex/internal/types"
 	"github.com/onex-blockchain/onex/internal/wallet"
 )
 
 type Bridge struct {
-	mu     sync.RWMutex
-	cfg    Config
-	node   *NodeClient
-	wallet *wallet.Wallet
-	reg    *Registry
-	store  *PortfolioStore
-	custom *customTokenStore
-	amm    *amm.Store
+	mu       sync.RWMutex
+	cfg      Config
+	node     *NodeClient
+	wallet   *wallet.Wallet
+	reg      *Registry
+	store    *PortfolioStore
+	custom   *customTokenStore
+	amm      *amm.Store
+	platform *tokenplatform.Store
 }
 
 func New(cfg Config) *Bridge {

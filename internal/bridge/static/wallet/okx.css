@@ -693,6 +693,47 @@ input:focus, select:focus, textarea:focus {
 .discover-panel { margin-top: 8px; }
 .discover-panel .btn-secondary { margin-bottom: 16px; }
 
+.platform-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+.platform-tab {
+  flex: 1;
+  min-width: 72px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.platform-tab.active {
+  color: var(--text);
+  border-color: var(--brand);
+  background: var(--bg-input);
+}
+.platform-pane { margin-bottom: 12px; }
+.platform-status-card .msg { margin: 0; font-size: 13px; }
+.field-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 8px 0 4px;
+}
+.token-meta { font-size: 11px; color: var(--text-tertiary); word-break: break-all; }
+.deploy-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 200, 83, 0.15);
+  color: var(--brand);
+  margin-left: 6px;
+}
+
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 .badge {

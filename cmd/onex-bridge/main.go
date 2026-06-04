@@ -20,6 +20,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
+	savePath := *configPath
+	if savePath == "" {
+		savePath = bridge.ConfigPath()
+	}
 	if cfg.ProjectRoot == "" {
 		cfg.ProjectRoot = findProjectRoot()
 	}
@@ -32,7 +36,7 @@ func main() {
 	if *walletPath != "" {
 		cfg.WalletPath = *walletPath
 	}
-	_ = bridge.SaveConfig(bridge.ConfigPath(), cfg)
+	_ = bridge.SaveConfig(savePath, cfg)
 
 	b := bridge.New(cfg)
 	if cfg.WalletPath != "" {

@@ -16,18 +16,19 @@ if errorlevel 1 (
   timeout /t 3 >nul
 )
 
-if not exist "bin\onex-bridge.exe" (
-  echo Building bridge...
-  go build -o bin\onex-bridge.exe ./cmd/onex-bridge
+echo Building OneX Wallet bridge...
+go build -o bin\onex-bridge.exe ./cmd/onex-bridge
+if errorlevel 1 (
+  echo Bridge build failed. Install Go from https://go.dev/dl/ then retry.
+  pause
+  exit /b 1
 )
 
-REM Start bridge if not running
-powershell -NoProfile -Command "try { (Invoke-WebRequest -Uri 'http://127.0.0.1:9338/bridge/status' -UseBasicParsing -TimeoutSec 2).StatusCode } catch { exit 1 }" >nul 2>&1
-if errorlevel 1 (
-  echo Starting OneX Wallet bridge...
-  start "OneX Bridge" /MIN "bin\onex-bridge.exe"
-  timeout /t 2 >nul
-)
+REM Restart bridge so embedded wallet UI and platform routes stay current
+taskkill /IM onex-bridge.exe /F >nul 2>&1
+echo Starting OneX Wallet bridge...
+start "OneX Bridge" /MIN "bin\onex-bridge.exe"
+timeout /t 2 >nul
 
 start http://127.0.0.1:9338/wallet/
 echo OneX Wallet opened. Bridge links your wallet to the local node.

@@ -28,8 +28,11 @@ Open **http://127.0.0.1:9338/wallet/** for:
 | **Tasks** | Earn rewards (ONEX, wONEX) |
 | **Loans** | Borrow / lend with collateral |
 | **OneX AI** | Wallet assistant (local + optional cloud LLM) |
+| **Token Platform** | Deploy tokens on 13+ chains, cross-chain wrap, CLI |
 
 Chains: OneX, Ethereum, BSC, Polygon, Arbitrum, Optimism, Avalanche, Base, Solana, Bitcoin, TRON, ALLTRA, testnet.
+
+See [docs/TOKEN-PLATFORM.md](docs/TOKEN-PLATFORM.md) for deploy, wrap, API, and CLI.
 
 ### OneX AI
 

@@ -27,16 +27,15 @@ services:
   onex-bridge:
     build: .
     image: onex-blockchain:latest
-    entrypoint: ["/usr/local/bin/onex-bridge"]
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - "-node"
-      - "http://onexd:8545"
-      - "-listen"
-      - ":9338"
-      - "-config"
-      - "/bridge-data/bridge.json"
-      - "-wallet"
-      - "/bridge-data/wallets/default.json"
+      - |
+        mkdir -p /bridge-data/wallets
+        exec /usr/local/bin/onex-bridge \
+          -node http://onexd:8545 \
+          -listen :9338 \
+          -config /bridge-data/bridge.json \
+          -wallet /bridge-data/wallets/default.json
     ports:
       - "9338:9338"
     volumes:
@@ -44,6 +43,10 @@ services:
     environment:
       ONEX_NODE_URL: http://onexd:8545
       ONEX_PROJECT_ROOT: /app
+      ONEX_API_KEY: ${ONEX_API_KEY:-}
+      ONEX_CORS_ORIGINS: ${ONEX_CORS_ORIGINS:-*}
+      # Persist bridge + token platform storage under the same mounted volume.
+      ONEX_HOME_DIR: /bridge-data
     depends_on:
       onexd:
         condition: service_healthy
@@ -64,6 +67,7 @@ services:
     volumes:
       - ./deploy/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - ./deploy/certs:/etc/nginx/certs:ro
+      - certbot-webroot:/var/www/certbot:ro
     depends_on:
       - onexd
       - onex-bridge
@@ -97,3 +101,4 @@ volumes:
   onex-data:
   bridge-data:
   onex-testnet:
+  certbot-webroot:

@@ -244,8 +244,8 @@
           </button>
           <button type="button" class="discover-tile" onclick="showDiscoverSection('token')">
             <div class="tile-icon">◎</div>
-            <div class="tile-title">Create token</div>
-            <div class="tile-desc">Launch your coin</div>
+            <div class="tile-title">Token Platform</div>
+            <div class="tile-desc">Deploy & wrap on 13+ chains</div>
           </button>
           <button type="button" class="discover-tile" onclick="showDiscoverSection('networks')">
             <div class="tile-icon">⛓</div>
@@ -277,16 +277,47 @@
 
         <div id="discover-token" class="discover-panel hidden">
           <button type="button" class="btn-secondary" onclick="showDiscoverMenu()">← Back</button>
-          <div class="card">
-            <select id="mint-chain" class="chain-select"></select>
-            <input id="mint-name" placeholder="Token name" />
-            <input id="mint-symbol" placeholder="Symbol" />
-            <input id="mint-decimals" type="number" value="8" />
-            <input id="mint-supply" placeholder="Total supply" />
-            <button type="button" class="btn-primary" onclick="createToken()">Create</button>
-            <p class="msg" id="mint-msg"></p>
+          <div class="card platform-status-card">
+            <div class="card-title">Token Platform</div>
+            <p class="msg" id="platform-status-msg">Loading…</p>
           </div>
-          <div class="card"><div id="custom-tokens"></div></div>
+          <div class="platform-tabs">
+            <button type="button" class="platform-tab active" data-ptab="create" onclick="setPlatformTab('create')">Create</button>
+            <button type="button" class="platform-tab" data-ptab="tokens" onclick="setPlatformTab('tokens')">My tokens</button>
+            <button type="button" class="platform-tab" data-ptab="wrap" onclick="setPlatformTab('wrap')">Wrap</button>
+            <button type="button" class="platform-tab" data-ptab="history" onclick="setPlatformTab('history')">History</button>
+          </div>
+          <div id="platform-create" class="platform-pane">
+            <div class="card">
+              <select id="mint-chain" class="chain-select"></select>
+              <input id="mint-name" placeholder="Token name" />
+              <input id="mint-symbol" placeholder="Symbol" />
+              <input id="mint-decimals" type="number" value="8" />
+              <input id="mint-supply" placeholder="Total supply" />
+              <button type="button" class="btn-primary" onclick="createToken()">Deploy token</button>
+              <p class="msg" id="mint-msg"></p>
+            </div>
+          </div>
+          <div id="platform-tokens" class="platform-pane hidden">
+            <div class="card"><div id="platform-tokens-list"></div></div>
+          </div>
+          <div id="platform-wrap" class="platform-pane hidden">
+            <div class="card">
+              <label class="field-label">Origin chain</label>
+              <select id="wrap-from-chain" class="chain-select"></select>
+              <label class="field-label">Origin token</label>
+              <select id="wrap-from-token"></select>
+              <label class="field-label">Target chain</label>
+              <select id="wrap-to-chain" class="chain-select"></select>
+              <label class="field-label">Amount</label>
+              <input id="wrap-amount" placeholder="Amount to wrap" />
+              <button type="button" class="btn-primary" onclick="wrapToken()">Wrap cross-chain</button>
+              <p class="msg" id="wrap-msg"></p>
+            </div>
+          </div>
+          <div id="platform-history" class="platform-pane hidden">
+            <div class="card"><div id="wrap-history"></div></div>
+          </div>
         </div>
 
         <div id="discover-networks" class="discover-panel hidden">
@@ -326,7 +357,7 @@
           <p class="msg">Ed25519 · EIP-1193 compatible via extension</p>
           <p class="addr" id="web3-addr">—</p>
           <button type="button" class="btn-secondary" onclick="copyAddress()">Copy address</button>
-          <a class="btn-secondary web3-link" href="http://127.0.0.1:8545/" target="_blank" rel="noopener">Open explorer</a>
+          <a class="btn-secondary web3-link" id="explorer-link" href="/explorer/" target="_blank" rel="noopener">Open explorer</a>
         </div>
       </section>
     </main>
@@ -396,6 +427,10 @@
     <label>Bridge API (HTTPS)</label>
     <input id="bridge-url-input" type="url" placeholder="https://your-onex-bridge.onrender.com" autocomplete="off" />
     <button type="button" class="btn-secondary" onclick="saveBridgeUrl()">Save bridge URL &amp; reload</button>
+    <label>API key (for deploy, wrap, send)</label>
+    <input id="api-key-input" type="password" placeholder="ONEX_API_KEY from your bridge server" autocomplete="off" />
+    <button type="button" class="btn-secondary" onclick="saveApiKey()">Save API key</button>
+    <p class="msg">Required when the wallet talks to a remote bridge (e.g. Gitea Pages). Same-host deploys skip the key automatically.</p>
     <p class="msg">Hosted on <a href="https://git.anakatech.llc/" target="_blank" rel="noopener">Anakatech Gitea</a>. Bridge API (HTTPS) is required on static Pages for send, swap, and portfolio sync.</p>
     <p class="msg">Logos, USD prices &amp; charts work via CoinGecko without bridge.</p>
     <p class="msg">Tip: <code>?bridge=https://your-bridge</code> in the URL saves automatically.</p>

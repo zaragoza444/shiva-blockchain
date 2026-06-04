@@ -55,8 +55,8 @@ func localReply(user string, ctx string) ChatResponse {
 	case containsAny(q, "task", "reward", "claim"):
 		reply = "Discover → Rewards: complete open tasks to claim ONEX or wONEX bonuses."
 		act = &Action{Type: "navigate", Tab: "discover"}
-	case containsAny(q, "create token", "mint token", "launch"):
-		reply = "Discover → Create token: set name, symbol, decimals, and supply on a chosen chain. Tokens appear in your portfolio."
+	case containsAny(q, "create token", "mint token", "launch", "token platform", "deploy token"):
+		reply = "Discover → Token Platform: deploy on any of 13+ chains, wrap cross-chain, or use CLI: onex token-create / token-wrap. See docs/TOKEN-PLATFORM.md."
 		act = &Action{Type: "navigate", Tab: "discover"}
 	case containsAny(q, "network", "chain", "chains"):
 		reply = "Discover → Networks lists 13+ supported chains (OneX, Ethereum, BSC, Polygon, and more)."

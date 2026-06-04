@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -40,6 +41,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/bridge/wallet/send", s.handleWalletSend)
 	mux.HandleFunc("/rpc", s.handleRPC)
 	s.registerDeFiRoutes(mux)
+	s.registerPlatformRoutes(mux)
 	s.registerAIRoutes(mux)
 
 	sub, _ := fs.Sub(walletFS, "static/wallet")
@@ -84,7 +86,7 @@ func (m *middleware) wrap(next http.Handler) http.Handler {
 			http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}
-		if m.apiKey != "" && needsAPIKey(r) {
+		if m.apiKey != "" && needsAPIKey(r) && !sameOriginRequest(r) {
 			if r.Header.Get("X-OneX-Api-Key") != m.apiKey && r.Header.Get("Authorization") != "Bearer "+m.apiKey {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
@@ -141,6 +143,32 @@ func originAllowed(origin string, allowed []string) bool {
 	return false
 }
 
+// sameOriginRequest allows the embedded wallet (same host as bridge) without exposing the API key in JS.
+func sameOriginRequest(r *http.Request) bool {
+	origin := strings.TrimSpace(r.Header.Get("Origin"))
+	if origin == "" {
+		return false
+	}
+	ou, err := url.Parse(origin)
+	if err != nil || ou.Host == "" {
+		return false
+	}
+	return strings.EqualFold(hostOnly(ou.Host), hostOnly(r.Host))
+}
+
+func hostOnly(h string) string {
+	h = strings.TrimSpace(h)
+	if strings.HasPrefix(h, "[") {
+		if i := strings.Index(h, "]"); i > 0 {
+			return strings.ToLower(h[:i+1])
+		}
+	}
+	if i := strings.LastIndex(h, ":"); i > 0 {
+		return strings.ToLower(h[:i])
+	}
+	return strings.ToLower(h)
+}
+
 func needsAPIKey(r *http.Request) bool {
 	if r.Method != http.MethodPost {
 		return false
@@ -158,6 +186,8 @@ func needsAPIKey(r *http.Request) bool {
 		"/bridge/stake",
 		"/bridge/unstake",
 		"/bridge/tokens/create",
+		"/bridge/platform/deploy",
+		"/bridge/platform/wrap",
 		"/bridge/onex-swap/swap",
 		"/bridge/onex-swap/liquidity/add",
 		"/bridge/onex-swap/liquidity/remove",

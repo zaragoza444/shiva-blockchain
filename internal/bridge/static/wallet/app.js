@@ -7,9 +7,49 @@ let chartPeriod = '24h';
 const BALANCE_HIST_KEY = 'onex_balance_history';
 const DAPP_CONNECTED_KEY = 'onex_dapp_connected';
 const THEME_KEY = 'onex_theme';
+const API_KEY_STORAGE = 'ONEX_API_KEY';
 
-const FEATURED_DAPPS = [
-  { name: 'Explorer', icon: '🔍', url: 'http://127.0.0.1:8545/' },
+function getApiKey() {
+  try { return localStorage.getItem(API_KEY_STORAGE) || ''; } catch (_) { return ''; }
+}
+
+async function api(path, opts = {}) {
+  const base = API || '';
+  if (!base && !path.startsWith('/')) {
+    return { error: 'Bridge URL not set. Open Settings and add your onex-bridge HTTPS URL.' };
+  }
+  const headers = { ...(opts.headers || {}) };
+  const key = getApiKey();
+  if (key && !headers['X-OneX-Api-Key'] && !headers['Authorization']) {
+    headers['X-OneX-Api-Key'] = key;
+  }
+  try {
+    const r = await fetch(base + path, { ...opts, headers, mode: 'cors' });
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); } catch { j = { error: text || r.statusText }; }
+    if (!r.ok && !j.error) j.error = r.statusText || String(r.status);
+    if (r.status === 401) j.error = j.error || 'Unauthorized — add your API key in Settings';
+    return j;
+  } catch (e) {
+    return { error: e.message || 'Network error' };
+  }
+}
+
+function nodeExplorerUrl() {
+  if (typeof window === 'undefined') return 'http://127.0.0.1:8545/explorer/';
+  const h = window.location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1') return 'http://127.0.0.1:8545/explorer/';
+  if (window.location.protocol === 'https:' || h === 'novatrustee.digital') {
+    return window.location.origin + '/explorer/';
+  }
+  const base = (API || window.location.origin || '').replace(/\/$/, '');
+  return base ? base + '/explorer/' : 'http://127.0.0.1:8545/explorer/';
+}
+
+function featuredDapps() {
+  return [
+  { name: 'Explorer', icon: '🔍', url: nodeExplorerUrl() },
   { name: 'OneX Swap', icon: '⇄', action: () => showTab('trade') },
   { name: 'Stake', icon: '📈', action: () => showTab('earn') },
   { name: 'NFT', icon: '🖼', action: () => { showTab('discover'); showDiscoverSection('nft'); } },
@@ -17,20 +57,7 @@ const FEATURED_DAPPS = [
   { name: 'Rewards', icon: '🎁', action: () => { showTab('discover'); showDiscoverSection('tasks'); } },
   { name: 'Token', icon: '◎', action: () => { showTab('discover'); showDiscoverSection('token'); } },
   { name: 'Networks', icon: '⛓', action: () => { showTab('discover'); showDiscoverSection('networks'); } },
-];
-
-async function api(path, opts = {}) {
-  if (!API) return { error: 'Bridge URL not set. Open Settings and add your onex-bridge HTTPS URL.' };
-  try {
-    const r = await fetch(API + path, { ...opts, mode: 'cors' });
-    const text = await r.text();
-    let j;
-    try { j = JSON.parse(text); } catch { j = { error: text || r.statusText }; }
-    if (!r.ok && !j.error) j.error = r.statusText || String(r.status);
-    return j;
-  } catch (e) {
-    return { error: e.message || 'Network error' };
-  }
+  ];
 }
 
 function applyFallbackCatalog() {
@@ -47,6 +74,23 @@ function saveBridgeUrl() {
   try { localStorage.setItem('ONEX_BRIDGE_URL', v); } catch (_) {}
   window.ONEX_BRIDGE_URL = v;
   location.reload();
+}
+
+function saveApiKey() {
+  const input = document.getElementById('api-key-input');
+  const v = (input?.value || '').trim();
+  try {
+    if (v) localStorage.setItem(API_KEY_STORAGE, v);
+    else localStorage.removeItem(API_KEY_STORAGE);
+  } catch (_) {}
+  alert(v ? 'API key saved' : 'API key cleared');
+}
+
+function loadSettingsFields() {
+  const bridgeInput = document.getElementById('bridge-url-input');
+  if (bridgeInput && API) bridgeInput.value = API;
+  const keyInput = document.getElementById('api-key-input');
+  if (keyInput) keyInput.value = getApiKey();
 }
 
 function updateExternalBanner() {
@@ -100,6 +144,7 @@ function openSheet(id) {
   if (id === 'receive' && portfolio?.address) {
     document.getElementById('addr').textContent = portfolio.address;
   }
+  if (id === 'settings') loadSettingsFields();
 }
 
 function closeSheet() {
@@ -126,6 +171,7 @@ function showDiscoverSection(id) {
   document.getElementById('discover-menu')?.classList.add('hidden');
   document.querySelectorAll('.discover-panel').forEach(p => p.classList.add('hidden'));
   document.getElementById('discover-' + id)?.classList.remove('hidden');
+  if (id === 'token') loadTokenPlatform();
 }
 
 async function loadTokens() {
@@ -277,7 +323,7 @@ function renderPortfolioChart() {
 function renderWeb3() {
   const grid = document.getElementById('dapp-grid');
   if (grid) {
-    grid.innerHTML = FEATURED_DAPPS.map((d, i) => `
+    grid.innerHTML = featuredDapps().map((d, i) => `
       <button type="button" class="dapp-item" onclick="launchDapp(${i})">
         <div class="dapp-icon">${d.icon}</div>
         <span>${d.name}</span>
@@ -290,7 +336,7 @@ function renderWeb3() {
 }
 
 function launchDapp(index) {
-  const d = FEATURED_DAPPS[index];
+  const d = featuredDapps()[index];
   if (!d) return;
   if (d.action) { d.action(); return; }
   if (d.url) openDappUrl(d.url, d.name);
@@ -418,8 +464,9 @@ async function sendAIMessage() {
 async function init() {
   loadTheme();
   updateExternalBanner();
-  const bridgeInput = document.getElementById('bridge-url-input');
-  if (bridgeInput && API) bridgeInput.value = API;
+  loadSettingsFields();
+  const ex = document.getElementById('explorer-link');
+  if (ex) ex.href = nodeExplorerUrl();
 
   if (API) {
     const ch = await api('/bridge/chains');
@@ -489,7 +536,7 @@ async function refreshAll() {
     renderTasks();
     renderLoans();
     renderStakes();
-    renderCustomTokens();
+    renderPlatformTokens();
     const addr = portfolio.address || '';
     const addrEl = document.getElementById('addr');
     const shortEl = document.getElementById('addr-short');
@@ -729,20 +776,123 @@ async function createToken() {
     decimals: parseInt(document.getElementById('mint-decimals').value, 10) || 8,
     supply: document.getElementById('mint-supply').value,
   };
-  const j = await api('/bridge/tokens/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  document.getElementById('mint-msg').textContent = j.error || `Created ${j.symbol} (${j.id}) on ${j.chainId}`;
+  const msg = document.getElementById('mint-msg');
+  let j = await api('/bridge/platform/deploy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (j.error && /no wallet/i.test(j.error)) {
+    await api('/bridge/wallet/create', { method: 'POST' });
+    j = await api('/bridge/platform/deploy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  }
+  if (j.error) {
+    msg.textContent = j.error;
+    return;
+  }
+  msg.textContent = `Deployed ${j.symbol} on ${j.chainId} · ${j.contractAddress || j.id}`;
   await loadTokens();
   fillChainSelects();
+  fillWrapSelects();
   refreshAll();
+  loadTokenPlatform();
+}
+
+function setPlatformTab(tab) {
+  document.querySelectorAll('.platform-tab').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
+  document.querySelectorAll('.platform-pane').forEach(p => p.classList.add('hidden'));
+  document.getElementById('platform-' + tab)?.classList.remove('hidden');
+  if (tab === 'tokens') renderPlatformTokens();
+  if (tab === 'history') renderWrapHistory();
+}
+
+async function loadTokenPlatform() {
+  const st = await api('/bridge/platform/status');
+  const el = document.getElementById('platform-status-msg');
+  if (el) {
+    if (st.error) el.textContent = st.error.includes('404') || st.error.includes('Not Found')
+      ? 'Restart wallet bridge: run-onex-wallet.bat'
+      : st.error;
+    else el.textContent = `${st.totalTokens || 0} tokens · ${st.totalWraps || 0} wraps · ${st.chainsSupported || 0} chains`;
+  }
+  fillWrapSelects();
+  renderPlatformTokens();
+  renderWrapHistory();
+}
+
+function fillWrapSelects() {
+  document.querySelectorAll('#wrap-from-chain, #wrap-to-chain').forEach(sel => {
+    if (!sel) return;
+    sel.innerHTML = chains.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  });
+  const fromChain = document.getElementById('wrap-from-chain')?.value || chains[0]?.id;
+  const sel = document.getElementById('wrap-from-token');
+  if (sel) {
+    const chainTokens = tokens.filter(t => t.chainId === fromChain);
+    sel.innerHTML = chainTokens.map(t => `<option value="${t.id}">${t.symbol} (${t.id})</option>`).join('') || '<option value="">No tokens</option>';
+  }
+  const fromEl = document.getElementById('wrap-from-chain');
+  if (fromEl && !fromEl._wrapBound) {
+    fromEl._wrapBound = true;
+    fromEl.addEventListener('change', fillWrapSelects);
+  }
+}
+
+async function renderPlatformTokens() {
+  const el = document.getElementById('platform-tokens-list');
+  if (!el) return;
+  const list = await api('/bridge/platform/tokens');
+  if (list && list.error) {
+    el.innerHTML = `<p class="msg">${list.error}</p>`;
+    return;
+  }
+  if (!Array.isArray(list)) {
+    el.innerHTML = '<p class="msg">Platform unavailable — rebuild and restart: build-onex.bat then run-onex-wallet.bat</p>';
+    return;
+  }
+  el.innerHTML = list.length ? list.map(t => `
+    <div class="task-card">
+      <strong>${t.symbol}</strong> — ${t.name}
+      <span class="deploy-badge">${t.deployStatus || 'registered'}</span>
+      <p class="msg">${t.chainId} · ${t.chainType} · supply ${fmtAtomic(t.supply, t.decimals || 8)}</p>
+      ${t.contractAddress ? `<p class="token-meta">${t.contractAddress}</p>` : ''}
+      ${t.isWrapped ? '<p class="msg">Wrapped token</p>' : ''}
+    </div>`).join('') : '<p class="msg">No tokens yet. Deploy one in the Create tab.</p>';
+}
+
+async function wrapToken() {
+  const body = {
+    originChainId: document.getElementById('wrap-from-chain').value,
+    originTokenId: document.getElementById('wrap-from-token').value,
+    targetChainId: document.getElementById('wrap-to-chain').value,
+    amount: document.getElementById('wrap-amount').value,
+  };
+  const j = await api('/bridge/platform/wrap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const msg = document.getElementById('wrap-msg');
+  if (j.error) {
+    msg.textContent = j.error;
+    return;
+  }
+  const w = j.wrapped || {};
+  msg.textContent = `Wrapped → ${w.symbol || ''} on ${w.chainId || body.targetChainId}`;
+  await loadTokens();
+  refreshAll();
+  loadTokenPlatform();
+}
+
+async function renderWrapHistory() {
+  const el = document.getElementById('wrap-history');
+  if (!el) return;
+  const list = await api('/bridge/platform/wraps');
+  if (!Array.isArray(list)) {
+    el.innerHTML = '<p class="msg">No wrap history.</p>';
+    return;
+  }
+  el.innerHTML = list.length ? list.map(w => `
+    <div class="task-card">
+      <strong>${w.originKey}</strong> → ${w.targetChainId}:${w.wrappedTokenId}
+      <p class="msg">${fmtAtomic(w.amount)} · ${w.status}</p>
+    </div>`).join('') : '<p class="msg">No cross-chain wraps yet.</p>';
 }
 
 async function renderCustomTokens() {
-  const list = await api('/bridge/tokens/custom');
-  document.getElementById('custom-tokens').innerHTML = (list || []).length ? list.map(t => `
-    <div class="task-card">
-      <strong>${t.symbol}</strong> — ${t.name}
-      <p class="msg">${t.chainId} · supply ${fmtAtomic(t.supply)} · by ${(t.creator||'').slice(0,12)}…</p>
-    </div>`).join('') : '<p class="msg">No custom tokens yet. Create one above.</p>';
+  await renderPlatformTokens();
 }
 
 function tokenKey(chain, tokenId) {

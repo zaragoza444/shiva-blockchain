@@ -2,7 +2,6 @@ package bridge
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/onex-blockchain/onex/internal/legacy"
-	"github.com/onex-blockchain/onex/internal/rpc"
 )
 
 type CustomToken struct {
@@ -101,59 +99,5 @@ func sanitizeTokenID(symbol string) string {
 }
 
 func (b *Bridge) CreateToken(chainID, name, symbol string, decimals int, supplyStr string) (*CustomToken, error) {
-	if err := b.EnsureWallet(); err != nil {
-		return nil, err
-	}
-	if name == "" || symbol == "" {
-		return nil, fmt.Errorf("name and symbol required")
-	}
-	if decimals < 0 || decimals > 18 {
-		return nil, fmt.Errorf("decimals must be 0-18")
-	}
-	supply, err := rpc.ParseAmount(supplyStr)
-	if err != nil {
-		return nil, err
-	}
-	if supply == 0 {
-		return nil, fmt.Errorf("supply must be > 0")
-	}
-	// scale supply for non-8 decimals when storing atomic
-	atomicSupply := supply
-	if decimals != 8 {
-		// user enters human supply; convert to 8-decimal internal atomic for portfolio
-		atomicSupply = supply
-	}
-
-	tokens, _ := b.customTokens().load()
-	tokenID := sanitizeTokenID(symbol)
-	for _, t := range tokens {
-		if t.ChainID == chainID && t.ID == tokenID {
-			tokenID = tokenID + newID()[:4]
-			break
-		}
-	}
-	ct := CustomToken{
-		ID: tokenID, ChainID: chainID, Name: name, Symbol: strings.ToUpper(symbol),
-		Decimals: decimals, Supply: fmt.Sprintf("%d", atomicSupply),
-		Creator: b.WalletAddress(), CreatedAt: nowUnix(),
-	}
-	tokens = append(tokens, ct)
-	if err := b.customTokens().save(tokens); err != nil {
-		return nil, err
-	}
-	b.mergeCustomTokensIntoRegistry()
-
-	p, err := b.GetPortfolio()
-	if err != nil {
-		return nil, err
-	}
-	key := b.registry().TokenKey(chainID, tokenID)
-	p.AddBalance(key, atomicSupply)
-	if p.CreatedTokens == nil {
-		p.CreatedTokens = []string{}
-	}
-	p.CreatedTokens = append(p.CreatedTokens, key)
-	_ = b.portfolio().Save(p)
-	b.completeTask(p, "create-token")
-	return &ct, nil
+	return b.CreateTokenViaPlatform(chainID, name, symbol, decimals, supplyStr)
 }

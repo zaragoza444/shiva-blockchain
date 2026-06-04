@@ -27,6 +27,16 @@ func main() {
 		runBalance(os.Args[2:])
 	case "send":
 		runSend(os.Args[2:])
+	case "token-create":
+		runTokenCreate(os.Args[2:])
+	case "token-list":
+		runTokenList(os.Args[2:])
+	case "token-wrap":
+		runTokenWrap(os.Args[2:])
+	case "token-info":
+		runTokenInfo(os.Args[2:])
+	case "platform-status":
+		runPlatformStatus(os.Args[2:])
 	default:
 		printUsage()
 		os.Exit(1)
@@ -38,7 +48,14 @@ func printUsage() {
 
   onex wallet-create [-out PATH]
   onex balance -address HEX [-api URL]
-  onex send -wallet PATH -to HEX -amount DECIMAL [-fee DECIMAL] [-api URL]`)
+  onex send -wallet PATH -to HEX -amount DECIMAL [-fee DECIMAL] [-api URL]
+
+Token Platform (requires onex-bridge running):
+  onex token-create -name NAME -symbol SYM -supply AMT [-chain CHAIN] [-decimals N] [-bridge URL]
+  onex token-list [-bridge URL]
+  onex token-wrap -from-chain CHAIN -from-token ID -to-chain CHAIN -amount AMT [-bridge URL]
+  onex token-info -chain CHAIN -id TOKEN_ID [-bridge URL]
+  onex platform-status [-bridge URL]`)
 }
 
 func runWalletCreate(args []string) {

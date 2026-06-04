@@ -38,10 +38,13 @@
   }
 
   // Local dev: auto-connect to onex-bridge on same machine.
+  // Production: wallet served at /wallet/ on the bridge host uses same origin.
   if (!window.ONEX_BRIDGE_URL) {
     const h = location.hostname;
     if (h === 'localhost' || h === '127.0.0.1') {
       window.ONEX_BRIDGE_URL = 'http://127.0.0.1:9338';
+    } else if (location.pathname.startsWith('/wallet') || h === 'novatrustee.digital') {
+      window.ONEX_BRIDGE_URL = location.origin;
     }
   }
 
