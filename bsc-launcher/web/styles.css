@@ -129,6 +129,9 @@ input, select {
 .result a { color: var(--accent); }
 
 .row-between { display: flex; justify-content: space-between; align-items: center; }
+.section-title { margin: 1.5rem 0 0.75rem; font-size: 1rem; color: var(--muted); }
+.liq-actions-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.price-tag { color: var(--ok); font-weight: 600; }
 .lookup-row { display: flex; gap: 0.5rem; margin: 1rem 0 0.5rem; }
 .lookup-row input { flex: 1; }
 .token-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }

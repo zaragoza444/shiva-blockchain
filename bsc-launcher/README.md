@@ -7,6 +7,7 @@ Production-ready platform to create **BEP-20 tokens on BNB Smart Chain mainnet**
 - Real on-chain ERC-20 deploy (MetaMask or platform wallet)
 - BSCScan / Etherscan V2 + on-chain RPC fallback
 - DexScreener USD price, liquidity, 24h change
+- **PancakeSwap V2 liquidity** — create TOKEN/BNB or TOKEN/USDT pools via MetaMask
 - Production: API key auth, CORS, rate limits, health checks, Docker, nginx TLS
 
 ## Quick start (development)
@@ -59,6 +60,9 @@ Templates: `.env.example` (dev), `.env.production.example` (prod)
 | GET | `/health`, `/ready` | no |
 | GET | `/api/config`, `/api/tokens`, `/api/bscscan/:addr`, `/api/price/:addr` | no |
 | POST | `/api/deploy`, `/api/tokens/register` | `X-API-Key` when configured |
+| GET | `/api/liquidity/pair?token=&quote=` | no |
+| POST | `/api/liquidity/register` | `X-API-Key` when configured |
+| GET | `/api/liquidity` | no |
 
 ## Security
 

@@ -11,7 +11,13 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM Local dev overrides (safe defaults for run-onex-wallet style local use)
 set "BSC_LAUNCHER_ROOT=%~dp0bsc-launcher"
+set "BSC_LAUNCHER_ENV=development"
+set "BSC_LAUNCHER_DATA_DIR=%~dp0bsc-launcher\data"
+set "BSC_LAUNCHER_API_KEY="
+set "BSC_LAUNCHER_CORS_ORIGINS=*"
+
 if exist "bsc-launcher\.env" (
   for /f "usebackq eol=# tokens=1,* delims==" %%a in ("bsc-launcher\.env") do (
     if not "%%a"=="" (
@@ -20,10 +26,27 @@ if exist "bsc-launcher\.env" (
   )
 )
 
+REM Re-apply local overrides so production .env does not break localhost
+set "BSC_LAUNCHER_ROOT=%~dp0bsc-launcher"
+set "BSC_LAUNCHER_ENV=development"
+set "BSC_LAUNCHER_DATA_DIR=%~dp0bsc-launcher\data"
+if "%BSC_LAUNCHER_API_KEY%"=="" set "BSC_LAUNCHER_API_KEY="
+set "BSC_LAUNCHER_CORS_ORIGINS=*"
+
+if not exist "bsc-launcher\data" mkdir "bsc-launcher\data"
+
 taskkill /IM bsc-launcher.exe /F >nul 2>&1
 echo Starting BSC Token Launcher on :9340...
-start "BSC Launcher" /MIN cmd /c "set BSC_LAUNCHER_ROOT=%BSC_LAUNCHER_ROOT%&& set BSC_DEPLOYER_PRIVATE_KEY=%BSC_DEPLOYER_PRIVATE_KEY%&& set BSCSCAN_API_KEY=%BSCSCAN_API_KEY%&& set ETHERSCAN_API_KEY=%ETHERSCAN_API_KEY%&& set BSC_RPC_URL=%BSC_RPC_URL%&& bin\bsc-launcher.exe"
-timeout /t 2 >nul
+start "BSC Launcher" /MIN cmd /c "cd /d "%~dp0" && set BSC_LAUNCHER_ROOT=%BSC_LAUNCHER_ROOT%&& set BSC_LAUNCHER_ENV=%BSC_LAUNCHER_ENV%&& set BSC_LAUNCHER_DATA_DIR=%BSC_LAUNCHER_DATA_DIR%&& set BSC_LAUNCHER_API_KEY=%BSC_LAUNCHER_API_KEY%&& set BSC_LAUNCHER_CORS_ORIGINS=%BSC_LAUNCHER_CORS_ORIGINS%&& set BSCSCAN_API_KEY=%BSCSCAN_API_KEY%&& set BSC_RPC_URL=%BSC_RPC_URL%&& set BSC_DEPLOYER_PRIVATE_KEY=%BSC_DEPLOYER_PRIVATE_KEY%&& bin\bsc-launcher.exe"
+ping -n 4 127.0.0.1 >nul
+
+powershell -NoProfile -Command "try { (Invoke-WebRequest -Uri 'http://127.0.0.1:9340/health' -UseBasicParsing -TimeoutSec 5).StatusCode } catch { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+  echo ERROR: Server did not start. Check port 9340 is free.
+  pause
+  exit /b 1
+)
+
 start http://127.0.0.1:9340/
-echo BSC Token Launcher opened at http://127.0.0.1:9340/
+echo BSC Token Launcher OK — http://127.0.0.1:9340/
 exit /b 0

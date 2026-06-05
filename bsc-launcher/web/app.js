@@ -61,7 +61,10 @@ async function loadConfig() {
     envEl.classList.toggle('prod', config.env === 'production');
   }
   if (config.apiKeyRequired && !getApiKey()) {
-    setMsg(document.getElementById('create-msg'), 'Production: set API key in Settings before deploying.', 'error');
+    setMsg(document.getElementById('create-msg'), 'API key required — open Settings and paste your BSC_LAUNCHER_API_KEY.', 'error');
+  } else if (config.env === 'development') {
+    const el = document.getElementById('create-msg');
+    if (el && !el.textContent) setMsg(el, 'Ready — connect MetaMask to deploy or add $1 liquidity.', 'ok');
   }
 }
 
@@ -188,8 +191,231 @@ function showDeployResult(data) {
     <p class="token-links">
       <a href="${tokenUrl}" target="_blank" rel="noopener">View on BSCScan</a>
       <a href="${txUrl}" target="_blank" rel="noopener">View transaction</a>
+      <a href="#" id="link-add-liq">List at $1 on BSCScan →</a>
     </p>`;
   el.classList.remove('hidden');
+  document.getElementById('link-add-liq')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    presetDollarListing(token.contractAddress);
+  });
+}
+
+function presetDollarListing(tokenAddr) {
+  setTab('liquidity');
+  const sel = document.getElementById('liq-token');
+  if (sel && tokenAddr) sel.value = tokenAddr;
+  document.getElementById('liq-target-usd').value = '1';
+  document.getElementById('liq-quote').value = 'usdt';
+  updateQuoteLabel();
+  if (!document.getElementById('liq-token-amount').value) {
+    document.getElementById('liq-token-amount').value = '10000';
+  }
+  calculateLiquidityQuote();
+  checkPair();
+}
+
+async function calculateLiquidityQuote() {
+  const tokenAmount = document.getElementById('liq-token-amount').value.trim();
+  const targetUsd = document.getElementById('liq-target-usd').value.trim() || '1';
+  const quote = document.getElementById('liq-quote').value;
+  const preview = document.getElementById('liq-price-preview');
+  if (!tokenAmount) {
+    setMsg(preview, 'Enter token amount first', 'error');
+    return;
+  }
+  const q = await api('/api/liquidity/quote?tokenAmount=' + encodeURIComponent(tokenAmount) +
+    '&targetUsd=' + encodeURIComponent(targetUsd) + '&quote=' + encodeURIComponent(quote));
+  if (q.error) {
+    setMsg(preview, q.error, 'error');
+    return;
+  }
+  document.getElementById('liq-quote-amount').value = q.quoteAmount;
+  preview.innerHTML = `Listing price: <span class="price-tag">$${q.targetUsd}</span> per token · add <strong>${q.quoteAmount} ${q.quoteSymbol}</strong>`;
+  preview.className = 'msg ok';
+  if (q.recommendUsdt) {
+    setMsg(document.getElementById('liq-pair-info'), 'Tip: switch to USDT pair for an exact $1 BSCScan price.', '');
+  }
+}
+
+function minAmount(amount) {
+  return (amount * 95n) / 100n;
+}
+
+function deadline() {
+  return Math.floor(Date.now() / 1000) + 60 * 20;
+}
+
+async function ensureAllowance(tokenContract, owner, spender, amount) {
+  const allowance = await tokenContract.allowance(owner, spender);
+  if (allowance >= amount) return;
+  setMsg(document.getElementById('liq-msg'), 'Approve token spend in MetaMask…');
+  const tx = await tokenContract.approve(spender, ethers.MaxUint256);
+  await tx.wait();
+}
+
+async function addLiquidityMetaMask() {
+  if (!signer) await connectWallet();
+  const tokenAddr = document.getElementById('liq-token').value;
+  const quoteId = document.getElementById('liq-quote').value;
+  const tokenAmountHuman = document.getElementById('liq-token-amount').value.trim();
+  const quoteAmountHuman = document.getElementById('liq-quote-amount').value.trim();
+  if (!tokenAddr) throw new Error('Select a token');
+
+  const list = await api('/api/tokens');
+  const tok = Array.isArray(list) ? list.find(t => t.contractAddress.toLowerCase() === tokenAddr.toLowerCase()) : null;
+  const decimals = tok?.decimals ?? 18;
+
+  const router = new ethers.Contract(config.dex.router, config.dex.routerAbi, signer);
+  const token = new ethers.Contract(tokenAddr, config.contractAbi, signer);
+  const owner = await signer.getAddress();
+  const amountToken = ethers.parseUnits(tokenAmountHuman, decimals);
+  const to = owner;
+  const dl = deadline();
+
+  let tx;
+  if (quoteId === 'bnb') {
+    const amountETH = ethers.parseEther(quoteAmountHuman);
+    await ensureAllowance(token, owner, config.dex.router, amountToken);
+    setMsg(document.getElementById('liq-msg'), 'Confirm add liquidity (BNB pair) in MetaMask…');
+    tx = await router.addLiquidityETH(
+      tokenAddr,
+      amountToken,
+      minAmount(amountToken),
+      minAmount(amountETH),
+      to,
+      dl,
+      { value: amountETH }
+    );
+  } else {
+    const quote = config.dex.quotes.find(q => q.id === quoteId);
+    if (!quote) throw new Error('Unknown quote token');
+    const amountQuote = ethers.parseUnits(quoteAmountHuman, quote.decimals);
+    const quoteToken = new ethers.Contract(quote.address, config.contractAbi, signer);
+    await ensureAllowance(token, owner, config.dex.router, amountToken);
+    await ensureAllowance(quoteToken, owner, config.dex.router, amountQuote);
+    setMsg(document.getElementById('liq-msg'), 'Confirm add liquidity (USDT pair) in MetaMask…');
+    tx = await router.addLiquidity(
+      tokenAddr,
+      quote.address,
+      amountToken,
+      amountQuote,
+      minAmount(amountToken),
+      minAmount(amountQuote),
+      to,
+      dl
+    );
+  }
+
+  setMsg(document.getElementById('liq-msg'), 'Waiting for BSC confirmation…');
+  await tx.wait();
+
+  const pair = await api('/api/liquidity/pair?token=' + encodeURIComponent(tokenAddr) + '&quote=' + quoteId);
+  const reg = await api('/api/liquidity/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      tokenAddress: tokenAddr,
+      quoteId,
+      pairAddress: pair.pairAddress || '',
+      tokenAmount: tokenAmountHuman,
+      quoteAmount: quoteAmountHuman,
+      txHash: tx.hash,
+      creator: owner,
+    }),
+  });
+  if (reg.error) throw new Error(reg.error);
+  return reg;
+}
+
+function showLiquidityResult(data) {
+  const el = document.getElementById('liq-result');
+  const liq = data.liquidity || data;
+  const bscToken = data.explorerTokenUrl || (config.explorer + '/token/' + liq.tokenAddress);
+  el.innerHTML = `
+    <p class="msg ok">Pool live — BSCScan will show ~$${document.getElementById('liq-target-usd')?.value || '1'} per token in ~5–15 min</p>
+    <p class="token-meta">Pair: ${liq.pairAddress || 'indexing…'}</p>
+    <p class="token-links">
+      <a href="${bscToken}" target="_blank" rel="noopener"><strong>View price on BSCScan</strong></a>
+      ${data.pancakeSwapUrl ? `<a href="${data.pancakeSwapUrl}" target="_blank" rel="noopener">PancakeSwap</a>` : ''}
+      ${data.dexscreenerUrl ? `<a href="${data.dexscreenerUrl}" target="_blank" rel="noopener">DexScreener</a>` : ''}
+      <a href="${data.explorerTxUrl || config.explorer + '/tx/' + liq.txHash}" target="_blank" rel="noopener">View TX</a>
+    </p>
+    <p class="msg">${data.bscscanNote || ''}</p>`;
+  el.classList.remove('hidden');
+}
+
+async function fillLiquidityTokens() {
+  const sel = document.getElementById('liq-token');
+  if (!sel) return;
+  const list = await api('/api/tokens');
+  if (!Array.isArray(list) || !list.length) {
+    sel.innerHTML = '<option value="">Deploy a token first</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Select launched token…</option>' +
+    list.map(t => `<option value="${t.contractAddress}" data-decimals="${t.decimals}" data-symbol="${t.symbol}">${t.symbol} — ${t.name}</option>`).join('');
+}
+
+async function checkPair() {
+  const info = document.getElementById('liq-pair-info');
+  const token = document.getElementById('liq-token')?.value;
+  const quote = document.getElementById('liq-quote')?.value || 'bnb';
+  if (!token || !info) return;
+  const pair = await api('/api/liquidity/pair?token=' + encodeURIComponent(token) + '&quote=' + quote);
+  if (pair.exists) {
+    info.innerHTML = `Pool exists: <a href="${pair.pancakeSwapUrl}" target="_blank" rel="noopener">${shortAddr(pair.pairAddress)}</a> — adding more liquidity is OK`;
+    info.className = 'msg ok';
+  } else {
+    info.textContent = 'No pool yet — this will create a new PancakeSwap V2 pair.';
+    info.className = 'msg';
+  }
+}
+
+async function renderLiquidityHistory() {
+  const el = document.getElementById('liq-history');
+  if (!el) return;
+  const list = await api('/api/liquidity');
+  if (!Array.isArray(list) || !list.length) {
+    el.innerHTML = '<p class="msg">No pools yet.</p>';
+    return;
+  }
+  el.innerHTML = list.map(l => `
+    <div class="token-card">
+      <strong>${shortAddr(l.tokenAddress)} / ${(l.quoteId || 'bnb').toUpperCase()}</strong>
+      <p class="msg">${l.tokenAmount} tokens + ${l.quoteAmount} ${(l.quoteId || 'bnb').toUpperCase()}</p>
+      <p class="token-meta">${l.pairAddress || 'pair pending'}</p>
+      <div class="token-links">
+        <a href="${config.explorer}/tx/${l.txHash}" target="_blank" rel="noopener">TX</a>
+        ${l.pairAddress ? `<a href="https://dexscreener.com/bsc/${l.pairAddress}" target="_blank" rel="noopener">DexScreener</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function handleLiquidity(e) {
+  e.preventDefault();
+  const msg = document.getElementById('liq-msg');
+  const result = document.getElementById('liq-result');
+  result.classList.add('hidden');
+  const btn = document.getElementById('btn-add-liquidity');
+  btn.disabled = true;
+  try {
+    const data = await addLiquidityMetaMask();
+    setMsg(msg, 'Liquidity added on PancakeSwap.', 'ok');
+    showLiquidityResult(data);
+    renderLiquidityHistory();
+    renderDashboard();
+  } catch (err) {
+    setMsg(msg, err.message || String(err), 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function updateQuoteLabel() {
+  const quote = document.getElementById('liq-quote')?.value || 'bnb';
+  const label = document.getElementById('liq-quote-label');
+  if (label) label.textContent = (quote === 'usdt' ? 'USDT' : 'BNB') + ' amount';
+  checkPair();
 }
 
 async function handleDeploy(e) {
@@ -249,14 +475,17 @@ async function renderDashboard() {
     const tokenUrl = config.explorer + '/token/' + token.contractAddress;
     const txUrl = config.explorer + '/tx/' + token.txHash;
     const hasLiq = price && price.hasLiquidity;
-    const priceNote = hasLiq ? '' : '<p class="msg">No DEX listing yet — price shows $0.00</p>';
+    const nearOne = price?.priceUsd >= 0.95 && price?.priceUsd <= 1.05;
+    const priceLabel = hasLiq ? (nearOne ? '<span class="price-tag">~$1 on BSCScan</span>' : fmtUsd(price.priceUsd)) : '$0.00';
+    const priceNote = hasLiq ? '' : '<p class="msg">Not on BSCScan yet — use <strong>List at $1 on BSCScan</strong> on the Liquidity tab</p>';
+    const liqBtn = hasLiq ? '' : `<button class="btn secondary btn-add-liq" data-addr="${token.contractAddress}">List at $1 on BSCScan</button>`;
     return `
       <div class="token-card">
         <h3>${token.symbol} <span class="badge">${token.deployMethod || 'deployed'}</span></h3>
         <p class="token-meta">${token.name} · ${token.chainId || 'bsc'} · supply ${token.supply}</p>
         <p class="token-meta">${token.contractAddress}</p>
         <div class="token-stats">
-          <div class="stat"><strong>${fmtUsd(price?.priceUsd || 0)}</strong><span>Price USD</span></div>
+          <div class="stat"><strong>${priceLabel}</strong><span>BSCScan / DEX price</span></div>
           <div class="stat"><strong>${fmtPct(price?.priceChange24h)}</strong><span>24h change</span></div>
           <div class="stat"><strong>${bscscan?.holders || '—'}</strong><span>Holders</span></div>
           <div class="stat"><strong>${bscscan?.txCount || '—'}</strong><span>Transfers</span></div>
@@ -266,16 +495,27 @@ async function renderDashboard() {
         <div class="token-links">
           <a href="${tokenUrl}" target="_blank" rel="noopener">View on BSCScan</a>
           <a href="${txUrl}" target="_blank" rel="noopener">View TX</a>
+          ${price?.pairAddress ? `<a href="https://dexscreener.com/bsc/${price.pairAddress}" target="_blank" rel="noopener">DexScreener</a>` : ''}
+          ${liqBtn}
         </div>
       </div>`;
   }).join('');
+  el.querySelectorAll('.btn-add-liq').forEach(btn => {
+    btn.addEventListener('click', () => presetDollarListing(btn.dataset.addr));
+  });
 }
 
 function setTab(tab) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.getElementById('pane-create').classList.toggle('hidden', tab !== 'create');
+  document.getElementById('pane-liquidity').classList.toggle('hidden', tab !== 'liquidity');
   document.getElementById('pane-dashboard').classList.toggle('hidden', tab !== 'dashboard');
   if (tab === 'dashboard') renderDashboard();
+  if (tab === 'liquidity') {
+    fillLiquidityTokens();
+    renderLiquidityHistory();
+    checkPair();
+  }
 }
 
 document.querySelectorAll('.tab').forEach(btn => {
@@ -288,6 +528,22 @@ document.getElementById('btn-lookup').addEventListener('click', lookupAddress);
 document.getElementById('btn-settings').addEventListener('click', openSettings);
 document.getElementById('btn-settings-save').addEventListener('click', saveSettings);
 document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
+document.getElementById('liquidity-form').addEventListener('submit', handleLiquidity);
+document.getElementById('liq-token').addEventListener('change', checkPair);
+document.getElementById('liq-quote').addEventListener('change', () => { updateQuoteLabel(); calculateLiquidityQuote(); });
+document.getElementById('liq-token-amount').addEventListener('input', debounce(calculateLiquidityQuote, 400));
+document.getElementById('liq-target-usd').addEventListener('input', debounce(calculateLiquidityQuote, 400));
+document.getElementById('btn-calc-dollar').addEventListener('click', () => {
+  document.getElementById('liq-target-usd').value = '1';
+  document.getElementById('liq-quote').value = 'usdt';
+  updateQuoteLabel();
+  calculateLiquidityQuote();
+});
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
 
 async function lookupAddress() {
   const input = document.getElementById('lookup-addr');

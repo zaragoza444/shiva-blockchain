@@ -30,6 +30,11 @@ func main() {
 	mux.HandleFunc("/api/tokens", srv.handleTokens)
 	mux.HandleFunc("/api/bscscan/", srv.handleBSCScan)
 	mux.HandleFunc("/api/price/", srv.handlePrice)
+	mux.HandleFunc("/api/market/bnb", srv.handleMarketBNB)
+	mux.HandleFunc("/api/liquidity/quote", srv.handleLiquidityQuote)
+	mux.HandleFunc("/api/liquidity/pair", srv.handleLiquidityPair)
+	mux.HandleFunc("/api/liquidity/register", srv.handleLiquidityRegister)
+	mux.HandleFunc("/api/liquidity", srv.handleLiquidityList)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/api/") {

@@ -11,20 +11,24 @@ import (
 )
 
 type Server struct {
-	cfg      Config
-	store    *TokenStore
-	bscscan  *bscScanClient
-	price    *priceClient
-	limiter  *rateLimiter
+	cfg       Config
+	store     *TokenStore
+	liquidity *LiquidityStore
+	bscscan   *bscScanClient
+	price     *priceClient
+	market    *marketClient
+	limiter   *rateLimiter
 }
 
 func NewServer(cfg Config) *Server {
 	return &Server{
-		cfg:     cfg,
-		store:   NewTokenStore(cfg.DataDir),
-		bscscan: newBSCScanClient(cfg.BSCScanAPIKey),
-		price:   newPriceClient(),
-		limiter: newRateLimiter(cfg.RateLimitPerMin),
+		cfg:       cfg,
+		store:     NewTokenStore(cfg.DataDir),
+		liquidity: NewLiquidityStore(cfg.DataDir),
+		bscscan:   newBSCScanClient(cfg.BSCScanAPIKey),
+		price:     newPriceClient(),
+		market:    newMarketClient(),
+		limiter:   newRateLimiter(cfg.RateLimitPerMin),
 	}
 }
 
@@ -43,6 +47,11 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
 	}
+	dex, err := dexConfig()
+	if err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
 	writeJSON(w, map[string]interface{}{
 		"chainId":              s.cfg.ChainID,
 		"chainName":            "BNB Smart Chain",
@@ -54,6 +63,7 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 		"backendDeployEnabled": s.cfg.DeployerKey != "",
 		"apiKeyRequired":       s.cfg.APIKey != "",
 		"env":                  s.cfg.Env,
+		"dex":                  dex,
 	})
 }
 
@@ -284,6 +294,205 @@ func (s *Server) handlePrice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, quote)
+}
+
+func (s *Server) handleMarketBNB(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "GET only", http.StatusMethodNotAllowed)
+		return
+	}
+	usd, err := s.market.BNBUSD()
+	if err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, map[string]interface{}{"symbol": "BNB", "priceUsd": usd})
+}
+
+func (s *Server) handleLiquidityQuote(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "GET only", http.StatusMethodNotAllowed)
+		return
+	}
+	tokenAmount, err := parsePositiveFloat(r.URL.Query().Get("tokenAmount"))
+	if err != nil {
+		writeJSON(w, map[string]string{"error": "tokenAmount required"})
+		return
+	}
+	targetUSD, err := parsePositiveFloat(r.URL.Query().Get("targetUsd"))
+	if err != nil || targetUSD == 0 {
+		targetUSD = 1
+	}
+	quote := strings.ToLower(r.URL.Query().Get("quote"))
+	if quote == "" {
+		quote = "usdt"
+	}
+
+	var quoteAmount float64
+	var quoteSymbol string
+	switch quote {
+	case "usdt":
+		quoteAmount = tokenAmount * targetUSD
+		quoteSymbol = "USDT"
+	case "bnb":
+		bnbUSD, err := s.market.BNBUSD()
+		if err != nil {
+			writeJSON(w, map[string]string{"error": err.Error()})
+			return
+		}
+		quoteAmount = (tokenAmount * targetUSD) / bnbUSD
+		quoteSymbol = "BNB"
+	default:
+		writeJSON(w, map[string]string{"error": "quote must be usdt or bnb"})
+		return
+	}
+
+	writeJSON(w, map[string]interface{}{
+		"tokenAmount":   tokenAmount,
+		"targetUsd":     targetUSD,
+		"quoteId":       quote,
+		"quoteSymbol":   quoteSymbol,
+		"quoteAmount":   formatAmount(quoteAmount),
+		"impliedPrice":  targetUSD,
+		"bscscanNote":   "BSCScan shows USD price from PancakeSwap liquidity. USDT pair is best for a $1 listing.",
+		"recommendUsdt": quote != "usdt",
+	})
+}
+
+func parsePositiveFloat(s string) (float64, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, fmt.Errorf("empty")
+	}
+	var v float64
+	if _, err := fmt.Sscanf(s, "%f", &v); err != nil {
+		return 0, err
+	}
+	if v <= 0 {
+		return 0, fmt.Errorf("must be > 0")
+	}
+	return v, nil
+}
+
+func formatAmount(v float64) string {
+	if v >= 1 {
+		return fmt.Sprintf("%.6f", v)
+	}
+	return fmt.Sprintf("%.10f", v)
+}
+
+func bscscanTokenURL(explorer, token string) string {
+	return strings.TrimRight(explorer, "/") + "/token/" + token
+}
+
+func (s *Server) handleLiquidityPair(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "GET only", http.StatusMethodNotAllowed)
+		return
+	}
+	token := r.URL.Query().Get("token")
+	quote := r.URL.Query().Get("quote")
+	if token == "" {
+		http.Error(w, "token required", http.StatusBadRequest)
+		return
+	}
+	if quote == "" {
+		quote = "bnb"
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+	pair, err := s.getPairAddress(ctx, token, quote)
+	if err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, map[string]interface{}{
+		"tokenAddress": token,
+		"quoteId":      quote,
+		"pairAddress":  pair,
+		"exists":       pair != "",
+		"pancakeSwapUrl": pancakeswapPairURL(pair),
+	})
+}
+
+func (s *Server) handleLiquidityList(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "GET only", http.StatusMethodNotAllowed)
+		return
+	}
+	list, err := s.liquidity.Load()
+	if err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, list)
+}
+
+type LiquidityRegisterRequest struct {
+	TokenAddress string `json:"tokenAddress"`
+	QuoteID      string `json:"quoteId"`
+	PairAddress  string `json:"pairAddress"`
+	TokenAmount  string `json:"tokenAmount"`
+	QuoteAmount  string `json:"quoteAmount"`
+	TxHash       string `json:"txHash"`
+	Creator      string `json:"creator"`
+}
+
+func (s *Server) handleLiquidityRegister(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST only", http.StatusMethodNotAllowed)
+		return
+	}
+	var req LiquidityRegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.TokenAddress == "" || req.TxHash == "" {
+		writeJSON(w, map[string]string{"error": "tokenAddress and txHash required"})
+		return
+	}
+	if req.QuoteID == "" {
+		req.QuoteID = "bnb"
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
+	defer cancel()
+	if req.PairAddress == "" {
+		pair, err := s.getPairAddress(ctx, req.TokenAddress, req.QuoteID)
+		if err == nil && pair != "" {
+			req.PairAddress = pair
+		}
+	}
+
+	rec := LiquidityRecord{
+		TokenAddress: req.TokenAddress,
+		QuoteID:      req.QuoteID,
+		PairAddress:  req.PairAddress,
+		TokenAmount:  req.TokenAmount,
+		QuoteAmount:  req.QuoteAmount,
+		TxHash:       req.TxHash,
+		Creator:      req.Creator,
+	}
+	if err := s.liquidity.Add(rec); err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, map[string]interface{}{
+		"liquidity":       rec,
+		"explorerTxUrl":   s.cfg.Explorer + "/tx/" + rec.TxHash,
+		"explorerTokenUrl": bscscanTokenURL(s.cfg.Explorer, rec.TokenAddress),
+		"pancakeSwapUrl":  pancakeswapPairURL(rec.PairAddress),
+		"dexscreenerUrl":  "https://dexscreener.com/bsc/" + rec.PairAddress,
+		"bscscanNote":     "Price on BSCScan updates within ~5–15 minutes after PancakeSwap indexes the pool.",
+	})
+}
+
+func pancakeswapPairURL(pair string) string {
+	if pair == "" {
+		return "https://pancakeswap.finance/liquidity"
+	}
+	return "https://pancakeswap.finance/info/v2/pairs/" + pair
 }
 
 func validateDeployRequest(req DeployRequest) error {
