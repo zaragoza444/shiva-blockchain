@@ -157,7 +157,7 @@ func (s *Server) getPairAddress(ctx context.Context, tokenAddr, quoteID string) 
 	}
 	token := common.HexToAddress(tokenAddr)
 
-	client, err := s.rpcClient(ctx)
+	client, err := s.rpcClient(ctx, s.cfg.RPCURL)
 	if err != nil {
 		return "", err
 	}

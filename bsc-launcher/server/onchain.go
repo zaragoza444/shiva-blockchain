@@ -21,12 +21,15 @@ type OnChainTokenInfo struct {
 	IsContract      bool   `json:"isContract"`
 }
 
-func (s *Server) rpcClient(ctx context.Context) (*ethclient.Client, error) {
-	return ethclient.DialContext(ctx, s.cfg.RPCURL)
+func (s *Server) rpcClient(ctx context.Context, rpcURL string) (*ethclient.Client, error) {
+	if rpcURL == "" {
+		rpcURL = s.cfg.RPCURL
+	}
+	return ethclient.DialContext(ctx, rpcURL)
 }
 
-func (s *Server) isContract(ctx context.Context, address string) (bool, error) {
-	client, err := s.rpcClient(ctx)
+func (s *Server) isContractOn(ctx context.Context, rpcURL, address string) (bool, error) {
+	client, err := s.rpcClient(ctx, rpcURL)
 	if err != nil {
 		return false, err
 	}
@@ -40,8 +43,16 @@ func (s *Server) isContract(ctx context.Context, address string) (bool, error) {
 	return len(code) > 0, nil
 }
 
-func (s *Server) readOnChainToken(ctx context.Context, address string) (*OnChainTokenInfo, error) {
-	isContract, err := s.isContract(ctx, address)
+func (s *Server) isContract(ctx context.Context, address string) (bool, error) {
+	return s.isContractOn(ctx, s.cfg.RPCURL, address)
+}
+
+func (s *Server) readOnChainTokenOn(ctx context.Context, chain Chain, address string) (*OnChainTokenInfo, error) {
+	rpcURL := chain.RPCURL
+	if rpcURL == "" {
+		rpcURL = s.cfg.RPCURL
+	}
+	isContract, err := s.isContractOn(ctx, rpcURL, address)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +64,7 @@ func (s *Server) readOnChainToken(ctx context.Context, address string) (*OnChain
 		return info, fmt.Errorf("%s is a wallet address, not a token contract", address)
 	}
 
-	client, err := s.rpcClient(ctx)
+	client, err := s.rpcClient(ctx, rpcURL)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +89,34 @@ func (s *Server) readOnChainToken(ctx context.Context, address string) (*OnChain
 		info.TotalSupply = supply.String()
 	}
 	return info, nil
+}
+
+func (s *Server) readOnChainToken(ctx context.Context, address string) (*OnChainTokenInfo, error) {
+	return s.readOnChainTokenOn(ctx, defaultChain(s.cfg), address)
+}
+
+func (s *Server) tokenInfoForChain(ctx context.Context, chain Chain, address string) (*BSCScanTokenInfo, error) {
+	if chain.ChainID == 0 || chain.RPCURL == "" {
+		return &BSCScanTokenInfo{
+			ContractAddress: address,
+			Error:           fmt.Sprintf("%s tracking uses explorer links — deploy OneX tokens on EVM chains", chain.Name),
+		}, nil
+	}
+
+	onchain, chainErr := s.readOnChainTokenOn(ctx, chain, address)
+	if chainErr != nil {
+		if onchain != nil && !onchain.IsContract {
+			return &BSCScanTokenInfo{
+				ContractAddress: address,
+				IsWallet:        true,
+				Error:           chainErr.Error(),
+			}, chainErr
+		}
+		return nil, chainErr
+	}
+
+	scan, _ := s.bscscan.TokenInfoForChain(chain.ChainID, address)
+	return mergeTokenInfo(scan, onchain), nil
 }
 
 func callString(ctx context.Context, client *ethclient.Client, parsed abi.ABI, addr common.Address, method string) (string, error) {

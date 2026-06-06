@@ -1,6 +1,6 @@
-# BSC Token Launcher
+# OneX Token Lab
 
-Production-ready platform to create **BEP-20 tokens on BNB Smart Chain mainnet** and view them on [BSCScan](https://bscscan.com) with live DEX prices.
+OneX-branded token generator and launcher — create **BEP-20 tokens on BNB Smart Chain mainnet**, auto-generate names/symbols, and view them on [BSCScan](https://bscscan.com) with live DEX prices.
 
 ## Features
 
@@ -13,7 +13,7 @@ Production-ready platform to create **BEP-20 tokens on BNB Smart Chain mainnet**
 ## Quick start (development)
 
 ```bat
-run-bsc-launcher.bat
+run-onex-token-lab.bat
 ```
 
 Open http://127.0.0.1:9340

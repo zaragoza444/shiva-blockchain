@@ -3,131 +3,465 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Create BEP-20 tokens on BNB Smart Chain mainnet. Deploy with MetaMask, track on BSCScan, live DEX prices.">
-  <title>BSC Token Launcher</title>
-  <link rel="stylesheet" href="/styles.css">
+  <meta name="description" content="OneX Token Lab — the most customizable BEP-20 token generator on BNB Smart Chain. No code, MetaMask deploy, owner dashboard.">
+  <title>OneX — Token Generator</title>
+  <link rel="stylesheet" href="/styles.css?v=6">
 </head>
 <body>
-  <header class="header">
-    <div class="brand">
-      <span class="logo">BSC</span>
-      <div>
-        <h1>Token Launcher</h1>
-        <p class="subtitle">Create BEP-20 tokens on BNB Smart Chain Mainnet</p>
-      </div>
+  <nav class="topnav">
+    <a href="#" class="nav-brand" data-nav="landing">
+      <span class="nav-logo">OneX</span>
+      <span class="nav-tag">Token Lab</span>
+    </a>
+    <div class="nav-links">
+      <a href="#" data-nav="generate">Generate</a>
+      <a href="#" data-nav="dashboard">Dashboard</a>
+      <a href="#" data-nav="liquidity">Liquidity</a>
     </div>
-    <div class="header-actions">
+    <div class="nav-actions">
+      <span id="global-status" class="global-status"></span>
       <span id="env-badge" class="env-badge"></span>
-      <button id="btn-settings" class="btn secondary" type="button">Settings</button>
-      <button id="btn-connect" class="btn secondary">Connect MetaMask</button>
+      <button id="btn-settings" class="btn btn-ghost" type="button" title="Production API key">Settings</button>
+      <button id="btn-connect" class="btn btn-outline">Connect Wallet</button>
       <span id="wallet-addr" class="wallet-addr"></span>
     </div>
-  </header>
-
-  <nav class="tabs">
-    <button class="tab active" data-tab="create">Create Token</button>
-    <button class="tab" data-tab="liquidity">Add Liquidity</button>
-    <button class="tab" data-tab="dashboard">Dashboard</button>
   </nav>
 
-  <main>
-    <section id="pane-create" class="pane">
-      <div class="card">
-        <h2>Deploy new BEP-20 token</h2>
-        <form id="create-form" class="form-grid">
-          <label>Name<input id="token-name" placeholder="My Token" required></label>
-          <label>Symbol<input id="token-symbol" placeholder="MTK" maxlength="11" required></label>
-          <label>Decimals<input id="token-decimals" type="number" min="0" max="18" value="18"></label>
-          <label>Total supply<input id="token-supply" placeholder="1000000" required></label>
-          <label class="full">Deploy method
-            <select id="deploy-method">
-              <option value="metamask">MetaMask (you pay gas)</option>
-              <option value="backend">Platform wallet (server pays gas)</option>
-            </select>
-          </label>
-          <div class="full actions">
-            <button type="submit" class="btn primary" id="btn-deploy">Deploy Token</button>
-          </div>
-        </form>
-        <p id="create-msg" class="msg"></p>
-        <div id="deploy-result" class="result hidden"></div>
+  <!-- Landing (20lab-style) -->
+  <div id="view-landing" class="view">
+    <section class="hero">
+      <p class="hero-kicker">The most customizable token generator</p>
+      <h1>Customizable token for your project</h1>
+      <p class="hero-lead">Choose the features you need and take full control of your tokens. Deploy OneX ERC-20 tokens on BSC, Ethereum, Base, Polygon, Arbitrum, and more — MetaMask deploy, multi-chain explorer links, PancakeSwap liquidity on BSC.</p>
+      <button type="button" class="btn btn-primary btn-lg" data-nav="generate">Create a Token</button>
+    </section>
+
+    <section class="chain-strip">
+      <p class="strip-label">Powered by</p>
+      <div class="chain-marquee">
+        <div class="chain-track" id="chain-marquee">
+          <span class="chain-pill active">BSC</span>
+          <span class="chain-pill active">Ethereum</span>
+          <span class="chain-pill active">Base</span>
+          <span class="chain-pill active">Polygon</span>
+          <span class="chain-pill active">Arbitrum</span>
+          <span class="chain-pill active">Optimism</span>
+          <span class="chain-pill active">Avalanche</span>
+          <span class="chain-pill active">Linea</span>
+          <span class="chain-pill active">Blast</span>
+          <span class="chain-pill active">Scroll</span>
+          <span class="chain-pill active">Solana</span>
+          <span class="chain-pill active">Sui</span>
+          <span class="chain-pill active">BSC</span>
+          <span class="chain-pill active">Ethereum</span>
+          <span class="chain-pill active">Base</span>
+          <span class="chain-pill active">Polygon</span>
+        </div>
       </div>
     </section>
 
-    <section id="pane-liquidity" class="pane hidden">
-      <div class="card">
-        <h2>List token on BSCScan at $1</h2>
-        <p class="msg">BSCScan shows USD price from your PancakeSwap pool. Use a <strong>USDT</strong> pair with target <strong>$1</strong> for an exact $1 listing (e.g. 10,000 tokens + 10,000 USDT).</p>
-        <form id="liquidity-form" class="form-grid">
-          <label class="full">Token
+    <section class="section">
+      <h2>Benefits of customizable tokens</h2>
+      <p class="section-lead">Creating fully customizable BEP-20 tokens with OneX lets you keep control over your project. Launch securely on BSC, add PancakeSwap liquidity, and track live prices on BSCScan.</p>
+      <div class="benefit-grid">
+        <article class="benefit-card">
+          <h3>No technical skills required</h3>
+          <p>For visionaries taking their first step into crypto who want professional tools and a simple deploy flow.</p>
+        </article>
+        <article class="benefit-card">
+          <h3>Maximize efficiency</h3>
+          <p>Save time with a guided wizard — configure name, supply, optional features, and deploy in minutes.</p>
+        </article>
+        <article class="benefit-card">
+          <h3>Generate with confidence</h3>
+          <p>Deploy on BSC mainnet with MetaMask. Full ownership stays in your wallet. Dashboard for every token you create.</p>
+        </article>
+      </div>
+      <button type="button" class="btn btn-primary" data-nav="generate">Create a Token</button>
+    </section>
+
+    <section class="section section-alt">
+      <p class="section-kicker">Features</p>
+      <h2>17 customizable features</h2>
+      <div class="feature-grid">
+        <div class="feature-group">
+          <h4>Taxes</h4>
+          <ul><li>Liquidity tax</li><li>Dividend tax</li><li>Auto-burn tax</li><li>Up to 5 wallet taxes</li></ul>
+        </div>
+        <div class="feature-group">
+          <h4>Limits</h4>
+          <ul><li>Anti-bot cooldown</li><li>Max amount per wallet</li><li>Max transaction limits</li></ul>
+        </div>
+        <div class="feature-group">
+          <h4>Utilities</h4>
+          <ul><li>Default exchange</li><li>Token recovery</li><li>Permit</li></ul>
+        </div>
+        <div class="feature-group">
+          <h4>Other</h4>
+          <ul><li>Mintable</li><li>Pausable</li><li>EnableTrading</li><li>Blacklist</li></ul>
+        </div>
+      </div>
+      <p class="note-muted">All 17 wizard features deploy on-chain via OneXToken on every supported EVM mainnet. PancakeSwap liquidity tooling is live on BSC.</p>
+    </section>
+
+    <section class="section">
+      <h2>How token creation works</h2>
+      <ol class="steps-list">
+        <li><strong>Select</strong> ERC-20 and your blockchain — BSC, Ethereum, Base, Polygon, and more.</li>
+        <li><strong>Configure</strong> general info and optional smart-contract features.</li>
+        <li><strong>Review</strong> the summary, click Deploy, and confirm in MetaMask.</li>
+      </ol>
+      <button type="button" class="btn btn-primary" data-nav="generate">Create a Token</button>
+    </section>
+
+    <section class="section faq">
+      <h2>Frequently asked questions</h2>
+      <details><summary>Do I have full ownership of the token?</summary><p>Yes. Tokens deploy from your connected wallet. You control the contract as the deployer and initial supply recipient.</p></details>
+      <details><summary>How can I verify my token on BSCScan?</summary><p>After deploy, open your token on BSCScan. Verification uses the contract source — contact support for OneX-assisted verification.</p></details>
+      <details><summary>How do I show a $1 price on BSCScan?</summary><p>Use the Liquidity tab to add a USDT pair on PancakeSwap V2 with matching amounts (e.g. 10,000 tokens + 10,000 USDT).</p></details>
+    </section>
+  </div>
+
+  <!-- Generate hub -->
+  <div id="view-generate" class="view hidden">
+    <div class="page-head">
+      <p class="breadcrumb">Home / Generate</p>
+      <h1>Crypto Token Generator</h1>
+      <p class="page-sub">Select the desired token type you wish to create.</p>
+    </div>
+    <div class="type-grid">
+      <article class="type-card active-type">
+        <span class="type-badge">Live</span>
+        <h2>ERC-20 Token</h2>
+        <p>Create your token on EVM-compatible blockchains such as BNB Smart Chain.</p>
+        <button type="button" class="btn btn-primary" id="btn-start-erc20">Create ERC-20 Token</button>
+      </article>
+      <article class="type-card">
+        <span class="type-badge">Live</span>
+        <h2>SPL Token</h2>
+        <p>Track Solana SPL tokens in your dashboard. OneX smart-contract deploy is on EVM — use ERC-20 for full wizard features.</p>
+        <button type="button" class="btn btn-outline" id="btn-start-spl">Open SPL Hub</button>
+      </article>
+      <article class="type-card">
+        <span class="type-badge">Live</span>
+        <h2>Sui Token</h2>
+        <p>Track Sui coins via explorer links. Deploy OneX customizable tokens on any supported EVM mainnet.</p>
+        <button type="button" class="btn btn-outline" id="btn-start-sui">Open Sui Hub</button>
+      </article>
+    </div>
+  </div>
+
+  <!-- Wizard -->
+  <div id="view-wizard" class="view hidden">
+    <div class="page-head">
+      <p class="breadcrumb">Home / Generate / ERC-20 Token Creator</p>
+      <h1>ERC-20 Token Creator</h1>
+    </div>
+
+    <div class="wizard-stepper">
+      <button type="button" class="step-tab active" data-step="1"><span>1</span> General</button>
+      <button type="button" class="step-tab" data-step="2"><span>2</span> Optional</button>
+      <button type="button" class="step-tab" data-step="3"><span>3</span> Taxes</button>
+      <button type="button" class="step-tab" data-step="4"><span>4</span> Summary</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-wizard-reset">Reset</button>
+    </div>
+
+    <form id="wizard-form" class="wizard-panel">
+      <!-- Step 1 -->
+      <div class="wizard-step" data-step-panel="1">
+        <p id="chain-banner" class="summary-warn hidden"></p>
+        <div class="form-section">
+          <h3>Blockchain</h3>
+          <label class="field">
+            <span>Blockchain *</span>
+            <select id="chain-select">
+              <option value="bsc" selected>BNB Smart Chain (BSC)</option>
+            </select>
+            <small>MetaMask will switch to the selected mainnet. Liquidity tools are available on BSC.</small>
+          </label>
+        </div>
+
+        <div class="form-section">
+          <h3>General</h3>
+          <div class="field-grid">
+            <label class="field">
+              <span>Token name *</span>
+              <input id="token-name" maxlength="50" placeholder="My Token" required>
+              <small>Max 50 characters. (Not editable later)</small>
+            </label>
+            <label class="field">
+              <span>Token symbol *</span>
+              <input id="token-symbol" maxlength="20" placeholder="MTK" required>
+              <small>Max 20 characters. (Not editable later)</small>
+            </label>
+            <label class="field full">
+              <span>Contract name *</span>
+              <div class="inline-choice">
+                <label class="radio-pill"><input type="radio" name="contract-name-mode" value="default" checked> Use default</label>
+                <label class="radio-pill"><input type="radio" name="contract-name-mode" value="custom"> Use custom</label>
+              </div>
+              <input id="contract-name" placeholder="Derived from token name" readonly>
+              <small>Visible on BSCScan after verification.</small>
+            </label>
+            <label class="field">
+              <span>Initial supply *</span>
+              <div class="input-suffix">
+                <input id="token-supply" placeholder="1000000000" required>
+                <span>Tokens</span>
+              </div>
+              <small>1 ≤ Initial Supply ≤ 9,999,999,999,999,999</small>
+            </label>
+            <label class="field">
+              <span>Decimals *</span>
+              <input id="token-decimals" type="number" min="1" max="18" value="18" required>
+              <small>1 ≤ Decimals ≤ 18. (Not editable later)</small>
+            </label>
+            <label class="field full toggle-field">
+              <div class="toggle-row">
+                <div>
+                  <strong>Mintable</strong>
+                  <small>If enabled, owner can mint until max supply is reached.</small>
+                </div>
+                <input type="checkbox" id="feat-mintable" class="toggle">
+              </div>
+            </label>
+            <label class="field full toggle-field">
+              <div class="toggle-row">
+                <div>
+                  <strong>Different supply recipient</strong>
+                  <small>Send initial supply to another address.</small>
+                </div>
+                <input type="checkbox" id="diff-recipient" class="toggle">
+              </div>
+              <input id="recipient-addr" class="conditional" placeholder="0x…" disabled>
+            </label>
+            <label class="field full toggle-field">
+              <div class="toggle-row">
+                <div>
+                  <strong>Different token owner</strong>
+                  <small>Transfer ownership to another address after deploy.</small>
+                </div>
+                <input type="checkbox" id="diff-owner" class="toggle">
+              </div>
+              <input id="owner-addr" class="conditional" placeholder="0x…" disabled>
+            </label>
+          </div>
+        </div>
+
+        <div class="wizard-actions">
+          <button type="button" class="btn btn-secondary" id="btn-generate">Auto-fill sample</button>
+          <button type="button" class="btn btn-primary" data-next="2">Save &amp; Next</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="wizard-step hidden" data-step-panel="2">
+        <h3>Optional features</h3>
+        <p class="section-lead">Choose advanced smart-contract features for your token.</p>
+        <div class="feature-toggles">
+          <label class="feat-card"><input type="checkbox" data-feat="antiBot" id="feat-anti-bot"><div><strong>Anti-bot cooldown</strong><span>Limit rapid transfers after launch.</span></div></label>
+          <label class="feat-card"><input type="checkbox" data-feat="maxWallet" id="feat-max-wallet"><div><strong>Max amount per wallet</strong><span>Cap holdings per address.</span></div></label>
+          <label class="feat-card"><input type="checkbox" data-feat="maxTx" id="feat-max-tx"><div><strong>Max transaction limits</strong><span>Limit size per transfer.</span></div></label>
+          <label class="feat-card"><input type="checkbox" data-feat="enableTrading"><div><strong>EnableTrading function</strong><span>Owner enables trading when ready.</span></div></label>
+          <label class="feat-card"><input type="checkbox" data-feat="pausable"><div><strong>Pausable</strong><span>Pause all transfers in emergencies.</span></div></label>
+          <label class="feat-card"><input type="checkbox" data-feat="blacklist"><div><strong>Blacklist</strong><span>Block specific addresses.</span></div></label>
+          <label class="feat-card"><input type="checkbox" data-feat="recovery"><div><strong>Token recovery</strong><span>Recover stuck tokens sent to contract.</span></div></label>
+          <label class="feat-card"><input type="checkbox" data-feat="permit"><div><strong>Permit (ERC-2612)</strong><span>Gasless approvals via signatures.</span></div></label>
+        </div>
+        <div class="field-grid limit-grid">
+          <label class="field">
+            <span>Anti-bot cooldown (seconds)</span>
+            <input type="number" id="opt-cooldown" min="1" value="30">
+          </label>
+          <label class="field">
+            <span>Max wallet (% of supply)</span>
+            <input type="number" id="opt-max-wallet-pct" min="0.1" step="0.1" value="2">
+          </label>
+          <label class="field">
+            <span>Max transaction (% of supply)</span>
+            <input type="number" id="opt-max-tx-pct" min="0.1" step="0.1" value="1">
+          </label>
+        </div>
+        <div class="wizard-actions">
+          <button type="button" class="btn btn-outline" data-prev="1">Back</button>
+          <button type="button" class="btn btn-primary" data-next="3">Save &amp; Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="wizard-step hidden" data-step-panel="3">
+        <h3>Taxes</h3>
+        <p class="section-lead">Configure transfer taxes (optional).</p>
+        <div class="field-grid">
+          <label class="field toggle-field">
+            <div class="toggle-row">
+              <div><strong>Liquidity tax</strong><small>% sent to liquidity on each transfer.</small></div>
+              <input type="checkbox" id="tax-liquidity" class="toggle">
+            </div>
+            <input type="number" id="tax-liquidity-pct" class="conditional" min="0" max="25" placeholder="%" disabled>
+          </label>
+          <label class="field toggle-field">
+            <div class="toggle-row">
+              <div><strong>Dividend tax</strong><small>Distribute to holders automatically.</small></div>
+              <input type="checkbox" id="tax-dividend" class="toggle">
+            </div>
+            <input type="number" id="tax-dividend-pct" class="conditional" min="0" max="25" placeholder="%" disabled>
+          </label>
+          <label class="field toggle-field">
+            <div class="toggle-row">
+              <div><strong>Auto-burn tax</strong><small>Burn tokens on each transfer.</small></div>
+              <input type="checkbox" id="tax-burn" class="toggle">
+            </div>
+            <input type="number" id="tax-burn-pct" class="conditional" min="0" max="25" placeholder="%" disabled>
+          </label>
+        </div>
+        <h4 class="section-title">Wallet taxes (up to 5)</h4>
+        <div id="wallet-tax-rows" class="wallet-tax-grid">
+          <div class="wallet-tax-row field-grid">
+            <label class="field"><span>Wallet address</span><input class="wallet-tax-addr" placeholder="0x…"></label>
+            <label class="field"><span>Tax %</span><input class="wallet-tax-pct" type="number" min="0" max="25" step="0.1" placeholder="1"></label>
+          </div>
+          <div class="wallet-tax-row field-grid">
+            <label class="field"><span>Wallet address</span><input class="wallet-tax-addr" placeholder="0x…"></label>
+            <label class="field"><span>Tax %</span><input class="wallet-tax-pct" type="number" min="0" max="25" step="0.1" placeholder="1"></label>
+          </div>
+          <div class="wallet-tax-row field-grid">
+            <label class="field"><span>Wallet address</span><input class="wallet-tax-addr" placeholder="0x…"></label>
+            <label class="field"><span>Tax %</span><input class="wallet-tax-pct" type="number" min="0" max="25" step="0.1" placeholder="1"></label>
+          </div>
+          <div class="wallet-tax-row field-grid">
+            <label class="field"><span>Wallet address</span><input class="wallet-tax-addr" placeholder="0x…"></label>
+            <label class="field"><span>Tax %</span><input class="wallet-tax-pct" type="number" min="0" max="25" step="0.1" placeholder="1"></label>
+          </div>
+          <div class="wallet-tax-row field-grid">
+            <label class="field"><span>Wallet address</span><input class="wallet-tax-addr" placeholder="0x…"></label>
+            <label class="field"><span>Tax %</span><input class="wallet-tax-pct" type="number" min="0" max="25" step="0.1" placeholder="1"></label>
+          </div>
+        </div>
+        <div class="wizard-actions">
+          <button type="button" class="btn btn-outline" data-prev="2">Back</button>
+          <button type="button" class="btn btn-primary" data-next="4">Save &amp; Next</button>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="wizard-step hidden" data-step-panel="4">
+        <h3>Summary</h3>
+        <div id="summary-box" class="summary-box"></div>
+        <p id="summary-warn" class="summary-warn hidden"></p>
+        <label class="field full">
+          <span>Deploy method</span>
+          <select id="deploy-method">
+            <option value="metamask">MetaMask (you pay gas)</option>
+            <option value="backend">Platform wallet (server pays gas)</option>
+          </select>
+        </label>
+        <p id="create-msg" class="status-msg"></p>
+        <div id="deploy-result" class="result hidden"></div>
+        <div class="wizard-actions">
+          <button type="button" class="btn btn-outline" data-prev="3">Back</button>
+          <button type="button" class="btn btn-secondary" id="btn-validate">Validate</button>
+          <button type="button" class="btn btn-primary" id="btn-deploy">Deploy</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="view-dashboard" class="view hidden">
+    <div class="page-head row-between">
+      <div>
+        <h1>Token owner dashboard</h1>
+        <p class="page-sub">Monitor tokens you created with OneX Token Lab.</p>
+      </div>
+      <button id="btn-refresh" class="btn btn-outline">Refresh</button>
+    </div>
+    <div class="lookup-row">
+      <input id="lookup-addr" placeholder="Look up any BEP-20 contract (0x…)" />
+      <button id="btn-lookup" class="btn btn-outline" type="button">Look up</button>
+    </div>
+    <p id="lookup-msg" class="status-msg"></p>
+    <div id="token-list" class="token-list"><p class="status-msg">Loading…</p></div>
+  </div>
+
+  <!-- Liquidity -->
+  <div id="view-liquidity" class="view hidden">
+    <div class="page-head">
+      <h1>Add liquidity</h1>
+      <p class="page-sub">List your token on BSCScan with a target USD price via PancakeSwap V2.</p>
+    </div>
+    <div class="wizard-panel">
+      <form id="liquidity-form">
+        <div class="field-grid">
+          <label class="field full">
+            <span>Token</span>
             <select id="liq-token" required>
               <option value="">Select launched token…</option>
             </select>
           </label>
-          <label>Target price (USD)<input id="liq-target-usd" type="number" min="0.000001" step="0.01" value="1"></label>
-          <label>Pair with
+          <label class="field">
+            <span>Target price (USD)</span>
+            <input id="liq-target-usd" type="number" min="0.000001" step="0.01" value="1">
+          </label>
+          <label class="field">
+            <span>Pair with</span>
             <select id="liq-quote">
               <option value="usdt" selected>USDT (best for $1)</option>
               <option value="bnb">BNB</option>
             </select>
           </label>
-          <label>Token amount in pool<input id="liq-token-amount" placeholder="10000" required></label>
-          <label><span id="liq-quote-label">USDT amount</span><input id="liq-quote-amount" placeholder="10000" required></label>
-          <div class="full liq-actions-row">
-            <button type="button" class="btn secondary" id="btn-calc-dollar">Calculate $1 listing</button>
-            <span id="liq-price-preview" class="msg"></span>
-          </div>
-          <div class="full">
-            <p id="liq-pair-info" class="msg"></p>
-          </div>
-          <div class="full actions">
-            <button type="submit" class="btn primary" id="btn-add-liquidity">Add Liquidity &amp; show on BSCScan</button>
-          </div>
-        </form>
-        <p id="liq-msg" class="msg"></p>
+          <label class="field">
+            <span>Token amount in pool</span>
+            <input id="liq-token-amount" placeholder="10000" required>
+          </label>
+          <label class="field">
+            <span id="liq-quote-label">USDT amount</span>
+            <input id="liq-quote-amount" placeholder="10000" required>
+          </label>
+        </div>
+        <div class="liq-actions-row">
+          <button type="button" class="btn btn-outline" id="btn-calc-dollar">Calculate $1 listing</button>
+          <span id="liq-price-preview" class="status-msg"></span>
+        </div>
+        <p id="liq-pair-info" class="status-msg"></p>
+        <p id="liq-msg" class="status-msg"></p>
         <div id="liq-result" class="result hidden"></div>
-        <h3 class="section-title">Liquidity history</h3>
-        <div id="liq-history" class="token-list"><p class="msg">No pools yet.</p></div>
-      </div>
-    </section>
+        <button type="submit" class="btn btn-primary" id="btn-add-liquidity">Add Liquidity &amp; show on BSCScan</button>
+      </form>
+      <h3 class="section-title">Liquidity history</h3>
+      <div id="liq-history" class="token-list"><p class="status-msg">No pools yet.</p></div>
+    </div>
+  </div>
 
-    <section id="pane-dashboard" class="pane hidden">
-      <div class="card">
-        <div class="row-between">
-          <h2>Launched tokens</h2>
-          <button id="btn-refresh" class="btn secondary">Refresh</button>
-        </div>
-        <div class="lookup-row">
-          <input id="lookup-addr" placeholder="Look up any BEP-20 contract (0x…)" />
-          <button id="btn-lookup" class="btn secondary" type="button">Look up</button>
-        </div>
-        <p id="lookup-msg" class="msg"></p>
-        <div id="token-list" class="token-list">
-          <p class="msg">Loading...</p>
-        </div>
-      </div>
-    </section>
-  </main>
+  <footer class="site-footer">
+    <p>OneX Token Lab — multi-chain ERC-20 generator. Live on BSC, Ethereum, Base, Polygon, Arbitrum, Optimism, Avalanche, Linea, Blast, Scroll · Prices via DexScreener.</p>
+  </footer>
 
   <div id="settings-modal" class="modal hidden">
-    <div class="modal-card">
-      <h2>Settings</h2>
-      <label>API key (production)
-        <input id="settings-api-key" type="password" placeholder="BSC_LAUNCHER_API_KEY" autocomplete="off">
+    <div class="modal-card settings-card">
+      <h2>Production Settings</h2>
+      <div class="settings-env-row">
+        <span>Server mode</span>
+        <strong id="settings-env-label" class="settings-env-badge">—</strong>
+      </div>
+      <p id="settings-env-hint" class="status-msg"></p>
+      <label class="field">
+        <span>API key</span>
+        <div class="settings-key-row">
+          <input id="settings-api-key" type="password" placeholder="Paste BSC_LAUNCHER_API_KEY" autocomplete="off">
+          <button id="btn-toggle-key" class="btn btn-outline btn-sm" type="button">Show</button>
+        </div>
+        <small>From <code>bsc-launcher/.env</code> — stored in this browser only.</small>
       </label>
-      <p class="msg">Required for deploy/register when the server has <code>BSC_LAUNCHER_API_KEY</code> set. Stored in this browser only.</p>
+      <p id="settings-key-status" class="status-msg"></p>
       <div class="modal-actions">
-        <button id="btn-settings-save" class="btn primary" type="button">Save</button>
-        <button id="btn-settings-close" class="btn secondary" type="button">Close</button>
+        <button id="btn-settings-save" class="btn btn-primary" type="button">Save API key</button>
+        <button id="btn-settings-close" class="btn btn-outline" type="button">Close</button>
       </div>
     </div>
   </div>
 
-  <footer class="footer">
-    <p>Tokens appear on <a href="https://bscscan.com" target="_blank" rel="noopener">BSCScan</a> after on-chain deployment. Prices from DexScreener when listed on a DEX.</p>
-  </footer>
-
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
-  <script src="/app.js"></script>
+  <script src="/app.js?v=6"></script>
 </body>
 </html>

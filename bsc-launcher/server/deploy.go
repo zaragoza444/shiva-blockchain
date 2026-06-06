@@ -16,10 +16,12 @@ import (
 )
 
 type DeployRequest struct {
-	Name     string `json:"name"`
-	Symbol   string `json:"symbol"`
-	Decimals int    `json:"decimals"`
-	Supply   string `json:"supply"`
+	Name     string        `json:"name"`
+	Symbol   string        `json:"symbol"`
+	Decimals int           `json:"decimals"`
+	Supply   string        `json:"supply"`
+	Chain    string        `json:"chain"`
+	Features TokenFeatures `json:"features"`
 }
 
 type DeployResult struct {
@@ -45,14 +47,18 @@ func parseSupply(supply string, decimals int) (*big.Int, error) {
 	return new(big.Int).Mul(raw, mult), nil
 }
 
-func (s *Server) deployContract(ctx context.Context, name, symbol string, decimals int, supplyRaw *big.Int, privateKeyHex string) (*DeployResult, error) {
+func (s *Server) deployContract(ctx context.Context, params InitParams, privateKeyHex string, chain Chain) (*DeployResult, error) {
 	keyHex := strings.TrimPrefix(strings.TrimSpace(privateKeyHex), "0x")
 	key, err := crypto.HexToECDSA(keyHex)
 	if err != nil {
 		return nil, fmt.Errorf("invalid deployer private key")
 	}
 
-	client, err := ethclient.DialContext(ctx, s.cfg.RPCURL)
+	rpcURL := chain.RPCURL
+	if rpcURL == "" {
+		rpcURL = s.cfg.RPCURL
+	}
+	client, err := ethclient.DialContext(ctx, rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("rpc connect: %w", err)
 	}
@@ -75,7 +81,7 @@ func (s *Server) deployContract(ctx context.Context, name, symbol string, decima
 		return nil, fmt.Errorf("abi parse: %w", err)
 	}
 
-	constructorArgs, err := parsedABI.Pack("", name, symbol, uint8(decimals), supplyRaw)
+	constructorArgs, err := parsedABI.Pack("", params)
 	if err != nil {
 		return nil, fmt.Errorf("pack constructor: %w", err)
 	}
@@ -83,8 +89,8 @@ func (s *Server) deployContract(ctx context.Context, name, symbol string, decima
 	bytecode := common.FromHex(contractBytecodeHex())
 	data := append(bytecode, constructorArgs...)
 
-	chainID := big.NewInt(s.cfg.ChainID)
-	tx := types.NewContractCreation(nonce, big.NewInt(0), 3_000_000, gasPrice, data)
+	chainID := big.NewInt(chain.ChainID)
+	tx := types.NewContractCreation(nonce, big.NewInt(0), 6_500_000, gasPrice, data)
 	signed, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
 	if err != nil {
 		return nil, fmt.Errorf("sign tx: %w", err)
@@ -136,8 +142,14 @@ type verifiedDeploy struct {
 	Creator         string
 }
 
-func (s *Server) verifyDeployTx(ctx context.Context, txHash, expectedContract string) (*verifiedDeploy, error) {
-	client, err := ethclient.DialContext(ctx, s.cfg.RPCURL)
+func (s *Server) verifyDeployTx(ctx context.Context, txHash, expectedContract, rpcURL string, chainID int64) (*verifiedDeploy, error) {
+	if rpcURL == "" {
+		rpcURL = s.cfg.RPCURL
+	}
+	if chainID == 0 {
+		chainID = s.cfg.ChainID
+	}
+	client, err := ethclient.DialContext(ctx, rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("rpc connect: %w", err)
 	}
@@ -146,7 +158,7 @@ func (s *Server) verifyDeployTx(ctx context.Context, txHash, expectedContract st
 	hash := common.HexToHash(txHash)
 	receipt, err := client.TransactionReceipt(ctx, hash)
 	if err != nil {
-		return nil, fmt.Errorf("tx not found on BSC: %w", err)
+		return nil, fmt.Errorf("tx not found on chain: %w", err)
 	}
 	if receipt.Status != types.ReceiptStatusSuccessful {
 		return nil, fmt.Errorf("deploy tx failed on-chain")
@@ -165,7 +177,7 @@ func (s *Server) verifyDeployTx(ctx context.Context, txHash, expectedContract st
 	if err != nil {
 		return out, nil
 	}
-	signer := types.LatestSignerForChainID(big.NewInt(s.cfg.ChainID))
+	signer := types.LatestSignerForChainID(big.NewInt(chainID))
 	from, err := types.Sender(signer, tx)
 	if err == nil {
 		out.Creator = from.Hex()

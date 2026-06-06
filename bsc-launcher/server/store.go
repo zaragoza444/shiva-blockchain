@@ -19,6 +19,10 @@ type TokenRecord struct {
 	TxHash          string `json:"txHash"`
 	Creator         string `json:"creator"`
 	DeployMethod    string `json:"deployMethod"`
+	ChainID         int64  `json:"chainId"`
+	ChainSlug       string `json:"chainSlug"`
+	ChainName       string `json:"chainName"`
+	Explorer        string `json:"explorer"`
 	CreatedAt       int64  `json:"createdAt"`
 }
 

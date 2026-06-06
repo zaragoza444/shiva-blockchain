@@ -2,12 +2,16 @@ package main
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type Server struct {
@@ -52,12 +56,15 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
 	}
+	def := defaultChain(s.cfg)
 	writeJSON(w, map[string]interface{}{
-		"chainId":              s.cfg.ChainID,
-		"chainName":            "BNB Smart Chain",
-		"rpcUrl":               s.cfg.RPCURL,
-		"explorer":             s.cfg.Explorer,
-		"nativeSymbol":         "BNB",
+		"chainId":              def.ChainID,
+		"chainSlug":            def.Slug,
+		"chainName":            def.Name,
+		"rpcUrl":               def.RPCURL,
+		"explorer":             def.Explorer,
+		"nativeSymbol":         def.NativeSymbol,
+		"chains":               supportedChains(),
 		"contractAbi":          abiArr,
 		"contractBytecode":     contractBytecodeHex(),
 		"backendDeployEnabled": s.cfg.DeployerKey != "",
@@ -97,10 +104,33 @@ func (s *Server) handleDeploy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	chainSlug := resolveChainSlug(req.Chain, req.Features.Chain)
+	chain, err := deployChain(chainSlug)
+	if err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 4*time.Minute)
 	defer cancel()
 
-	result, err := s.deployContract(ctx, req.Name, strings.ToUpper(req.Symbol), req.Decimals, supplyRaw, s.cfg.DeployerKey)
+	init, err := buildInitParams(req.Name, strings.ToUpper(req.Symbol), req.Decimals, supplyRaw, req.Features, "")
+	if err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+	if init.Owner == (common.Address{}) {
+		keyHex := strings.TrimPrefix(strings.TrimSpace(s.cfg.DeployerKey), "0x")
+		if key, kerr := crypto.HexToECDSA(keyHex); kerr == nil {
+			pub := key.Public().(*ecdsa.PublicKey)
+			init.Owner = crypto.PubkeyToAddress(*pub)
+			if init.Recipient == (common.Address{}) {
+				init.Recipient = init.Owner
+			}
+		}
+	}
+
+	result, err := s.deployContract(ctx, init, s.cfg.DeployerKey, chain)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
@@ -115,6 +145,10 @@ func (s *Server) handleDeploy(w http.ResponseWriter, r *http.Request) {
 		TxHash:          result.TxHash,
 		Creator:         result.Creator,
 		DeployMethod:    "backend",
+		ChainID:         chain.ChainID,
+		ChainSlug:       chain.Slug,
+		ChainName:       chain.Name,
+		Explorer:        chain.Explorer,
 	}
 	if err := s.store.Add(rec); err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
@@ -122,21 +156,24 @@ func (s *Server) handleDeploy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, map[string]interface{}{
-		"token":   rec,
-		"txHash":  result.TxHash,
-		"explorerTokenUrl": s.cfg.Explorer + "/token/" + result.ContractAddress,
-		"explorerTxUrl":    s.cfg.Explorer + "/tx/" + result.TxHash,
+		"token":            rec,
+		"txHash":           result.TxHash,
+		"chain":            chain,
+		"explorerTokenUrl": explorerTokenURL(chain.Explorer, result.ContractAddress),
+		"explorerTxUrl":    explorerTxURL(chain.Explorer, result.TxHash),
 	})
 }
 
 type RegisterRequest struct {
-	ContractAddress string `json:"contractAddress"`
-	Name            string `json:"name"`
-	Symbol          string `json:"symbol"`
-	Decimals        int    `json:"decimals"`
-	Supply          string `json:"supply"`
-	TxHash          string `json:"txHash"`
-	Creator         string `json:"creator"`
+	ContractAddress string        `json:"contractAddress"`
+	Name            string        `json:"name"`
+	Symbol          string        `json:"symbol"`
+	Decimals        int           `json:"decimals"`
+	Supply          string        `json:"supply"`
+	TxHash          string        `json:"txHash"`
+	Creator         string        `json:"creator"`
+	Chain           string        `json:"chain"`
+	Features        TokenFeatures `json:"features"`
 }
 
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -160,10 +197,17 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	chainSlug := resolveChainSlug(req.Chain, req.Features.Chain)
+	chain, err := deployChain(chainSlug)
+	if err != nil {
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
 
-	verified, err := s.verifyDeployTx(ctx, req.TxHash, req.ContractAddress)
+	verified, err := s.verifyDeployTx(ctx, req.TxHash, req.ContractAddress, chain.RPCURL, chain.ChainID)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
@@ -181,6 +225,10 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		TxHash:          req.TxHash,
 		Creator:         req.Creator,
 		DeployMethod:    "metamask",
+		ChainID:         chain.ChainID,
+		ChainSlug:       chain.Slug,
+		ChainName:       chain.Name,
+		Explorer:        chain.Explorer,
 	}
 	if err := s.store.Add(rec); err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
@@ -188,9 +236,10 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, map[string]interface{}{
-		"token": rec,
-		"explorerTokenUrl": s.cfg.Explorer + "/token/" + rec.ContractAddress,
-		"explorerTxUrl":    s.cfg.Explorer + "/tx/" + rec.TxHash,
+		"token":            rec,
+		"chain":            chain,
+		"explorerTokenUrl": explorerTokenURL(chain.Explorer, rec.ContractAddress),
+		"explorerTxUrl":    explorerTxURL(chain.Explorer, rec.TxHash),
 	})
 }
 
@@ -220,25 +269,43 @@ func (s *Server) handleTokenDetail(w http.ResponseWriter, r *http.Request) {
 
 	rec, regErr := s.store.Find(addr)
 	lookupAddr := addr
+	chain := defaultChain(s.cfg)
 	if regErr == nil {
 		lookupAddr = rec.ContractAddress
+		if rec.ChainSlug != "" {
+			if c, err := chainBySlug(rec.ChainSlug); err == nil {
+				chain = c
+			}
+		} else if rec.ChainID != 0 {
+			if c, err := chainByID(rec.ChainID); err == nil {
+				chain = c
+			}
+		}
+		if rec.Explorer != "" {
+			chain.Explorer = rec.Explorer
+		}
+	} else if q := r.URL.Query().Get("chain"); q != "" {
+		if c, err := chainBySlug(q); err == nil {
+			chain = c
+		}
 	}
 
-	info, err := s.tokenInfo(r.Context(), lookupAddr)
+	info, err := s.tokenInfoForChain(r.Context(), chain, lookupAddr)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
 	}
-	quote, _ := s.price.Quote(lookupAddr)
+	quote, _ := s.price.Quote(chain.DexChainID, lookupAddr)
 
 	resp := map[string]interface{}{
-		"bscscan": info,
-		"price":   quote,
-		"explorerTokenUrl": s.cfg.Explorer + "/token/" + lookupAddr,
+		"bscscan":          info,
+		"price":            quote,
+		"chain":            chain,
+		"explorerTokenUrl": explorerTokenURL(chain.Explorer, lookupAddr),
 	}
 	if regErr == nil {
 		resp["token"] = rec
-		resp["explorerTxUrl"] = s.cfg.Explorer + "/tx/" + rec.TxHash
+		resp["explorerTxUrl"] = explorerTxURL(chain.Explorer, rec.TxHash)
 	}
 	writeJSON(w, resp)
 }
@@ -253,29 +320,18 @@ func (s *Server) handleBSCScan(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "address required", http.StatusBadRequest)
 		return
 	}
-	info, err := s.tokenInfo(r.Context(), addr)
+	chain := defaultChain(s.cfg)
+	if q := r.URL.Query().Get("chain"); q != "" {
+		if c, err := chainBySlug(q); err == nil {
+			chain = c
+		}
+	}
+	info, err := s.tokenInfoForChain(r.Context(), chain, addr)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
 	}
 	writeJSON(w, info)
-}
-
-func (s *Server) tokenInfo(ctx context.Context, address string) (*BSCScanTokenInfo, error) {
-	chain, chainErr := s.readOnChainToken(ctx, address)
-	if chainErr != nil {
-		if chain != nil && !chain.IsContract {
-			return &BSCScanTokenInfo{
-				ContractAddress: address,
-				IsWallet:        true,
-				Error:           chainErr.Error(),
-			}, chainErr
-		}
-		return nil, chainErr
-	}
-
-	scan, _ := s.bscscan.TokenInfo(address)
-	return mergeTokenInfo(scan, chain), nil
 }
 
 func (s *Server) handlePrice(w http.ResponseWriter, r *http.Request) {
@@ -288,7 +344,13 @@ func (s *Server) handlePrice(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "address required", http.StatusBadRequest)
 		return
 	}
-	quote, err := s.price.Quote(addr)
+	chain := defaultChain(s.cfg)
+	if q := r.URL.Query().Get("chain"); q != "" {
+		if c, err := chainBySlug(q); err == nil {
+			chain = c
+		}
+	}
+	quote, err := s.price.Quote(chain.DexChainID, addr)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()})
 		return
@@ -379,10 +441,6 @@ func formatAmount(v float64) string {
 		return fmt.Sprintf("%.6f", v)
 	}
 	return fmt.Sprintf("%.10f", v)
-}
-
-func bscscanTokenURL(explorer, token string) string {
-	return strings.TrimRight(explorer, "/") + "/token/" + token
 }
 
 func (s *Server) handleLiquidityPair(w http.ResponseWriter, r *http.Request) {
@@ -480,8 +538,8 @@ func (s *Server) handleLiquidityRegister(w http.ResponseWriter, r *http.Request)
 	}
 	writeJSON(w, map[string]interface{}{
 		"liquidity":       rec,
-		"explorerTxUrl":   s.cfg.Explorer + "/tx/" + rec.TxHash,
-		"explorerTokenUrl": bscscanTokenURL(s.cfg.Explorer, rec.TokenAddress),
+		"explorerTxUrl":    explorerTxURL(s.cfg.Explorer, rec.TxHash),
+		"explorerTokenUrl": explorerTokenURL(s.cfg.Explorer, rec.TokenAddress),
 		"pancakeSwapUrl":  pancakeswapPairURL(rec.PairAddress),
 		"dexscreenerUrl":  "https://dexscreener.com/bsc/" + rec.PairAddress,
 		"bscscanNote":     "Price on BSCScan updates within ~5–15 minutes after PancakeSwap indexes the pool.",

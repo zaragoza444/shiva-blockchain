@@ -65,8 +65,11 @@ func (c *bscScanClient) setCached(key string, data interface{}) {
 	c.cache[key] = cacheEntry{at: time.Now(), data: data}
 }
 
-func (c *bscScanClient) TokenInfo(address string) (*BSCScanTokenInfo, error) {
-	key := "tokeninfo:" + strings.ToLower(address)
+func (c *bscScanClient) TokenInfoForChain(chainID int64, address string) (*BSCScanTokenInfo, error) {
+	if chainID == 0 {
+		chainID = c.chainID
+	}
+	key := fmt.Sprintf("tokeninfo:%d:%s", chainID, strings.ToLower(address))
 	if v, ok := c.getCached(key); ok {
 		return v.(*BSCScanTokenInfo), nil
 	}
@@ -78,7 +81,7 @@ func (c *bscScanClient) TokenInfo(address string) (*BSCScanTokenInfo, error) {
 	}
 
 	q := url.Values{}
-	q.Set("chainid", fmt.Sprintf("%d", c.chainID))
+	q.Set("chainid", fmt.Sprintf("%d", chainID))
 	q.Set("module", "token")
 	q.Set("action", "tokeninfo")
 	q.Set("contractaddress", address)
@@ -115,6 +118,10 @@ func (c *bscScanClient) TokenInfo(address string) (*BSCScanTokenInfo, error) {
 
 	c.setCached(key, info)
 	return info, nil
+}
+
+func (c *bscScanClient) TokenInfo(address string) (*BSCScanTokenInfo, error) {
+	return c.TokenInfoForChain(c.chainID, address)
 }
 
 func (c *bscScanClient) request(q url.Values) ([]byte, error) {

@@ -2,14 +2,17 @@ const fs = require('fs');
 const path = require('path');
 const solc = require('solc');
 
-const srcPath = path.join(__dirname, 'src', 'SimpleERC20.sol');
+const contractFile = 'OneXToken.sol';
+const contractName = 'OneXToken';
+const srcPath = path.join(__dirname, 'src', contractFile);
 const source = fs.readFileSync(srcPath, 'utf8');
 
 const input = {
   language: 'Solidity',
-  sources: { 'SimpleERC20.sol': { content: source } },
+  sources: { [contractFile]: { content: source } },
   settings: {
     optimizer: { enabled: true, runs: 200 },
+    viaIR: true,
     outputSelection: { '*': { '*': ['abi', 'evm.bytecode'] } },
   },
 };
@@ -21,12 +24,12 @@ if (errors.length) {
   process.exit(1);
 }
 
-const contract = output.contracts['SimpleERC20.sol']['SimpleERC20'];
+const contract = output.contracts[contractFile][contractName];
 const abiDir = path.join(__dirname, '..', 'abi');
 fs.mkdirSync(abiDir, { recursive: true });
+fs.writeFileSync(path.join(abiDir, 'OneXToken.abi.json'), JSON.stringify(contract.abi, null, 2));
+fs.writeFileSync(path.join(abiDir, 'OneXToken.bin'), '0x' + contract.evm.bytecode.object);
+// Back-compat aliases for server paths
 fs.writeFileSync(path.join(abiDir, 'SimpleERC20.abi.json'), JSON.stringify(contract.abi, null, 2));
-fs.writeFileSync(
-  path.join(abiDir, 'SimpleERC20.bin'),
-  '0x' + contract.evm.bytecode.object
-);
-console.log('Wrote abi/SimpleERC20.abi.json and abi/SimpleERC20.bin');
+fs.writeFileSync(path.join(abiDir, 'SimpleERC20.bin'), '0x' + contract.evm.bytecode.object);
+console.log('Wrote abi/OneXToken.* and abi/SimpleERC20.*');

@@ -41,7 +41,7 @@ func main() {
 			http.NotFound(w, r)
 			return
 		}
-		serveStatic(w, r, cfg.WebDir)
+		serveStatic(w, r, cfg.WebDir, cfg.Env)
 	})
 
 	handler := chain(
@@ -98,7 +98,7 @@ func (s *Server) routeTokens(w http.ResponseWriter, r *http.Request) {
 	s.handleTokenDetail(w, r)
 }
 
-func serveStatic(w http.ResponseWriter, r *http.Request, webDir string) {
+func serveStatic(w http.ResponseWriter, r *http.Request, webDir, env string) {
 	if r.URL.Path == "/" {
 		http.ServeFile(w, r, filepath.Join(webDir, "index.html"))
 		return
@@ -114,7 +114,11 @@ func serveStatic(w http.ResponseWriter, r *http.Request, webDir string) {
 		return
 	}
 	if strings.HasSuffix(full, ".js") || strings.HasSuffix(full, ".css") {
-		w.Header().Set("Cache-Control", "public, max-age=3600")
+		if env != "production" {
+			w.Header().Set("Cache-Control", "no-cache")
+		} else {
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+		}
 	}
 	http.ServeFile(w, r, full)
 }

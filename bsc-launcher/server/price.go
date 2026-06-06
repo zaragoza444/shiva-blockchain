@@ -50,8 +50,11 @@ func (c *priceClient) setCached(key string, data interface{}) {
 	c.cache[key] = cacheEntry{at: time.Now(), data: data}
 }
 
-func (c *priceClient) Quote(address string) (*PriceQuote, error) {
-	key := "price:" + strings.ToLower(address)
+func (c *priceClient) Quote(dexChainID, address string) (*PriceQuote, error) {
+	if dexChainID == "" {
+		dexChainID = "bsc"
+	}
+	key := "price:" + dexChainID + ":" + strings.ToLower(address)
 	if v, ok := c.getCached(key); ok {
 		return v.(*PriceQuote), nil
 	}
@@ -98,7 +101,7 @@ func (c *priceClient) Quote(address string) (*PriceQuote, error) {
 	quote := &PriceQuote{}
 	var bestLiq float64
 	for _, p := range payload.Pairs {
-		if p.ChainID != "bsc" && !strings.EqualFold(p.ChainID, "56") {
+		if !strings.EqualFold(p.ChainID, dexChainID) && p.ChainID != fmt.Sprintf("%d", chainIDFromDex(dexChainID)) {
 			continue
 		}
 		if p.Liquidity.USD < bestLiq {
