@@ -38,6 +38,7 @@ func (s *Server) registerDeFiRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/bridge/onex-swap/bridge/quote", s.handleBridgeQuote)
 	mux.HandleFunc("/bridge/onex-swap/bridge", s.handleBridgeExec)
 	registerLegacySwapRoutes(mux, s)
+	s.registerLedgerRoutes(mux)
 	mux.HandleFunc("/swap", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/wallet/#swap", http.StatusFound)
 	})

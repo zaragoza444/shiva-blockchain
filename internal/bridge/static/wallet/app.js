@@ -8,6 +8,9 @@ const BALANCE_HIST_KEY = 'onex_balance_history';
 const DAPP_CONNECTED_KEY = 'onex_dapp_connected';
 const THEME_KEY = 'onex_theme';
 const API_KEY_STORAGE = 'ONEX_API_KEY';
+const EVM_HOLDER_KEY = 'onex_evm_holder';
+let ledgerSource = 'all';
+let ledgerSnapshot = null;
 
 function getApiKey() {
   try { return localStorage.getItem(API_KEY_STORAGE) || ''; } catch (_) { return ''; }
@@ -50,6 +53,7 @@ function nodeExplorerUrl() {
 function featuredDapps() {
   return [
   { name: 'Explorer', icon: '🔍', url: nodeExplorerUrl() },
+  { name: 'Real Ledger', icon: '📒', action: () => showTab('ledger') },
   { name: 'OneX Swap', icon: '⇄', action: () => showTab('trade') },
   { name: 'Stake', icon: '📈', action: () => showTab('earn') },
   { name: 'NFT', icon: '🖼', action: () => { showTab('discover'); showDiscoverSection('nft'); } },
@@ -91,6 +95,20 @@ function loadSettingsFields() {
   if (bridgeInput && API) bridgeInput.value = API;
   const keyInput = document.getElementById('api-key-input');
   if (keyInput) keyInput.value = getApiKey();
+  const evmInput = document.getElementById('evm-holder-input');
+  if (evmInput) evmInput.value = getEvmHolder();
+}
+
+function getEvmHolder() {
+  try { return localStorage.getItem(EVM_HOLDER_KEY) || ''; } catch (_) { return ''; }
+}
+
+function saveEvmHolder() {
+  const input = document.getElementById('evm-holder-input');
+  const v = (input?.value || '').trim();
+  try { localStorage.setItem(EVM_HOLDER_KEY, v); } catch (_) {}
+  alert(v ? 'EVM address saved' : 'EVM address cleared');
+  refreshLedger();
 }
 
 function updateExternalBanner() {
@@ -113,6 +131,7 @@ const SCREEN_ALIASES = {
   stake: 'earn', loans: 'earn', earn: 'earn',
   discover: 'discover', nft: 'discover', tasks: 'discover',
   createtoken: 'discover', token: 'discover', chains: 'discover', networks: 'discover',
+  ledger: 'ledger', real: 'ledger', bank: 'ledger',
   web3: 'web3', dapp: 'web3', dapps: 'web3',
   ai: 'ai', assistant: 'ai', chat: 'ai',
 };
@@ -127,6 +146,7 @@ function showTab(name) {
   });
   if (screen === 'trade') { loadAmmPools(); updateDexStatus(); updateSwapCTA(); }
   if (screen === 'earn') renderStakePools();
+  if (screen === 'ledger') { refreshLedger(); initLedgerConvertSelects(); }
   if (screen === 'web3') renderWeb3();
   if (screen === 'ai') initAI();
   if (screen === 'discover') {
@@ -494,6 +514,7 @@ async function init() {
   setInterval(() => bridgeStatus(), 20000);
   const hash = (location.hash || '').replace('#', '').toLowerCase();
   if (hash === 'swap') showTab('trade');
+  else if (hash === 'ledger' || hash === 'real') showTab('ledger');
   else if (hash === 'web3' || hash === 'dapp') showTab('web3');
   else if (hash === 'ai') showTab('ai');
   else if (hash && SCREEN_ALIASES[hash]) showTab(hash);
@@ -1183,6 +1204,154 @@ function onChainChange(sel, tokenSelId) {
   if (!tokSel) return;
   const list = tokens.filter(t => t.chainId === chain);
   tokSel.innerHTML = list.map(t => `<option value="${t.id}">${t.symbol}</option>`).join('');
+}
+
+const LEDGER_CONVERT_ASSETS = ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'ONEX', 'SOL'];
+
+function initLedgerConvertSelects() {
+  const from = document.getElementById('ledger-conv-from');
+  const to = document.getElementById('ledger-conv-to');
+  if (!from || from.options.length) return;
+  const opts = LEDGER_CONVERT_ASSETS.map(a => `<option value="${a}">${a}</option>`).join('');
+  from.innerHTML = opts;
+  to.innerHTML = opts;
+  to.value = 'USD';
+}
+
+function setLedgerSource(src) {
+  ledgerSource = src;
+  document.querySelectorAll('.ledger-filter').forEach(b => {
+    b.classList.toggle('active', b.dataset.src === src);
+  });
+  refreshLedger();
+}
+
+function ledgerModeLabel(snap) {
+  if (!snap) return '—';
+  if (snap.mode === 'production' || snap.mode === 'prod') return 'production';
+  return snap.mode || 'demo';
+}
+
+function modeBadgeClass(mode) {
+  if (mode === 'real' || mode === 'bank' || mode === 'fiat') return 'real';
+  return 'sim';
+}
+
+async function loadLedgerStatus() {
+  const el = document.getElementById('ledger-bank-status');
+  const badge = document.getElementById('ledger-mode-badge');
+  const j = await api('/bridge/ledger/status');
+  if (j.error) {
+    if (el) el.textContent = j.error;
+    return;
+  }
+  if (badge) badge.textContent = j.production ? 'production' : (j.mode || 'demo');
+  const bank = j.bank || {};
+  const parts = [];
+  if (bank.configured) parts.push(`Provider: ${bank.provider || 'custom'}`);
+  if (bank.plaid) parts.push('Plaid ready');
+  if (bank.truelayer) parts.push('TrueLayer ready');
+  if (bank.file) parts.push('Bank file');
+  if (bank.customAPI) parts.push('Custom API');
+  if (el) {
+    el.textContent = parts.length ? parts.join(' · ') : 'No bank source configured on bridge server.';
+  }
+}
+
+async function refreshLedger() {
+  await loadLedgerStatus();
+  const evm = getEvmHolder();
+  const q = new URLSearchParams();
+  if (ledgerSource && ledgerSource !== 'all') q.set('source', ledgerSource);
+  if (evm) q.set('evm', evm);
+  const path = '/bridge/ledger/read' + (q.toString() ? '?' + q.toString() : '');
+  const snap = await api(path);
+  const grid = document.getElementById('ledger-entries');
+  if (snap.error) {
+    if (grid) grid.innerHTML = `<div class="empty-state"><p>${snap.error}</p></div>`;
+    return;
+  }
+  ledgerSnapshot = snap;
+  renderLedger(snap);
+}
+
+function renderLedger(snap) {
+  const totalEl = document.getElementById('ledger-total-usd');
+  const srcEl = document.getElementById('ledger-source-totals');
+  const grid = document.getElementById('ledger-entries');
+  if (!grid) return;
+
+  if (totalEl) totalEl.textContent = fmtUsd(snap.totalUsd || 0);
+  if (srcEl && snap.bySourceUsd) {
+    srcEl.innerHTML = Object.entries(snap.bySourceUsd)
+      .filter(([, v]) => v > 0)
+      .map(([k, v]) => `<span class="ledger-src-chip">${k} ${fmtUsd(v)}</span>`)
+      .join('');
+  }
+
+  const entries = snap.entries || [];
+  if (!entries.length) {
+    grid.innerHTML = `<div class="empty-state"><p>No ledger entries for this filter.</p>
+      <p class="msg">Connect bank (Plaid/TrueLayer), set EVM address in Settings, or import a ledger below.</p></div>`;
+    return;
+  }
+
+  const sorted = [...entries].sort((a, b) => (b.fiatUsd || 0) - (a.fiatUsd || 0));
+  grid.innerHTML = sorted.map(e => {
+    const sym = e.asset || '?';
+    const chain = chains.find(c => c.id === e.chainId);
+    const color = chain?.color || (e.mode === 'bank' || e.mode === 'fiat' ? '#4a9eff' : '#00e5b0');
+    const sub = [e.source, e.chainId, e.account].filter(Boolean).join(' · ');
+    return `<div class="asset-row ledger-row">
+      <div class="asset-icon" style="background:${color}22;color:${color}">${sym.slice(0, 2)}</div>
+      <div class="asset-info">
+        <div class="asset-symbol">${sym} <span class="ledger-mode ${modeBadgeClass(e.mode)}">${e.mode}</span></div>
+        <div class="asset-name">${sub || e.reference || ''}</div>
+      </div>
+      <div class="asset-right">
+        <div class="asset-amount">${e.human || '—'}</div>
+        <div class="asset-fiat">${fmtUsd(e.fiatUsd)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function doLedgerConvert() {
+  const amt = document.getElementById('ledger-conv-amt')?.value;
+  const from = document.getElementById('ledger-conv-from')?.value;
+  const to = document.getElementById('ledger-conv-to')?.value;
+  const out = document.getElementById('ledger-conv-result');
+  if (!amt || !from || !to) return;
+  const j = await api('/bridge/ledger/convert', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fromAsset: from, toAsset: to, amount: amt }),
+  });
+  if (out) {
+    out.textContent = j.error ? j.error : `${j.fromAmount} ${j.fromAsset} = ${j.toAmount} ${j.toAsset} (${fmtUsd(j.fiatUsd)})`;
+  }
+}
+
+async function doLedgerImport() {
+  const raw = document.getElementById('ledger-import-json')?.value?.trim();
+  const msg = document.getElementById('ledger-import-msg');
+  if (!raw) return;
+  let body;
+  try { body = JSON.parse(raw); } catch (e) {
+    if (msg) msg.textContent = 'Invalid JSON';
+    return;
+  }
+  const j = await api('/bridge/ledger/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (msg) msg.textContent = j.error ? j.error : `Imported ${j.entries || 0} entries`;
+  if (!j.error) {
+    document.getElementById('ledger-import-json').value = '';
+    ledgerSource = 'import';
+    setLedgerSource('import');
+  }
 }
 
 init();

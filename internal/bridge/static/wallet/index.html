@@ -228,6 +228,61 @@
         </div>
       </section>
 
+      <!-- REAL LEDGER -->
+      <section id="screen-ledger" class="screen">
+        <div class="ledger-header">
+          <h1 class="trade-header">Real Ledger</h1>
+          <span class="ledger-mode-badge" id="ledger-mode-badge">—</span>
+        </div>
+        <p class="msg ledger-intro">Unified bank, on-chain, and imported balances — converted to real fiat &amp; crypto.</p>
+
+        <div class="ledger-total-card">
+          <div class="balance-label">Total (real)</div>
+          <div class="balance-total" id="ledger-total-usd">—</div>
+          <div class="ledger-source-totals" id="ledger-source-totals"></div>
+        </div>
+
+        <div class="ledger-filters">
+          <button type="button" class="ledger-filter active" data-src="all" onclick="setLedgerSource('all')">All</button>
+          <button type="button" class="ledger-filter" data-src="bank" onclick="setLedgerSource('bank')">Bank</button>
+          <button type="button" class="ledger-filter" data-src="onex" onclick="setLedgerSource('onex')">OneX</button>
+          <button type="button" class="ledger-filter" data-src="evm" onclick="setLedgerSource('evm')">EVM</button>
+          <button type="button" class="ledger-filter" data-src="import" onclick="setLedgerSource('import')">Import</button>
+        </div>
+
+        <div class="section-head">
+          <h2>Entries</h2>
+          <a href="#" onclick="refreshLedger();return false">Refresh</a>
+        </div>
+        <div class="asset-list" id="ledger-entries"></div>
+
+        <div class="card ledger-convert-card">
+          <div class="card-title">Convert</div>
+          <div class="ledger-convert-row">
+            <input id="ledger-conv-amt" placeholder="Amount" inputmode="decimal" />
+            <select id="ledger-conv-from"></select>
+            <span class="ledger-conv-arrow">→</span>
+            <select id="ledger-conv-to"></select>
+          </div>
+          <button type="button" class="btn-primary" onclick="doLedgerConvert()">Convert to real</button>
+          <p class="msg" id="ledger-conv-result"></p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Import ledger</div>
+          <p class="msg">Paste JSON from any bank, exchange, or wallet export.</p>
+          <textarea id="ledger-import-json" rows="4" placeholder='{"entries":[{"asset":"BTC","amount":"0.5"}]}'></textarea>
+          <button type="button" class="btn-secondary" onclick="doLedgerImport()">Import &amp; value</button>
+          <p class="msg" id="ledger-import-msg"></p>
+        </div>
+
+        <div class="card ledger-bank-card">
+          <div class="card-title">Bank connection</div>
+          <p class="msg" id="ledger-bank-status">Loading…</p>
+          <p class="msg ledger-bank-hint">Server: set <code>ONEX_BANK_PROVIDER=plaid</code> or <code>truelayer</code> with API keys. Or use <code>ONEX_BANK_LEDGER_FILE</code>.</p>
+        </div>
+      </section>
+
       <!-- DISCOVER -->
       <section id="screen-discover" class="screen">
         <h1 class="trade-header">Discover</h1>
@@ -246,6 +301,11 @@
             <div class="tile-icon">◎</div>
             <div class="tile-title">Token Platform</div>
             <div class="tile-desc">Deploy & wrap on 13+ chains</div>
+          </button>
+          <button type="button" class="discover-tile" onclick="showTab('ledger')">
+            <div class="tile-icon">📒</div>
+            <div class="tile-title">Real Ledger</div>
+            <div class="tile-desc">Bank + crypto → real fiat</div>
           </button>
           <button type="button" class="discover-tile" onclick="showDiscoverSection('networks')">
             <div class="tile-icon">⛓</div>
@@ -371,6 +431,10 @@
         <span class="nav-icon">⇄</span>
         Trade
       </button>
+      <button type="button" data-screen="ledger" onclick="showTab('ledger')">
+        <span class="nav-icon">📒</span>
+        Ledger
+      </button>
       <button type="button" data-screen="earn" onclick="showTab('earn')">
         <span class="nav-icon">📈</span>
         Earn
@@ -424,6 +488,9 @@
       <span>Wallet</span>
       <button type="button" class="btn-primary" onclick="createWallet(); closeSheet()">Create new wallet</button>
     </div>
+    <label>EVM address (real on-chain reads)</label>
+    <input id="evm-holder-input" type="text" placeholder="0x… for Ethereum/BSC balances" autocomplete="off" />
+    <button type="button" class="btn-secondary" onclick="saveEvmHolder()">Save EVM address</button>
     <label>Bridge API (HTTPS)</label>
     <input id="bridge-url-input" type="url" placeholder="https://your-onex-bridge.onrender.com" autocomplete="off" />
     <button type="button" class="btn-secondary" onclick="saveBridgeUrl()">Save bridge URL &amp; reload</button>

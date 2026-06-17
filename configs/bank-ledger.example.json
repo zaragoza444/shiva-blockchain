@@ -1,0 +1,18 @@
+{
+  "accounts": [
+    {
+      "id": "checking-usd",
+      "name": "Business Checking",
+      "iban": "US00BANK00000000000001",
+      "currency": "USD",
+      "balance": "25000.00"
+    },
+    {
+      "id": "savings-eur",
+      "name": "EUR Savings",
+      "iban": "DE89370400440532013000",
+      "currency": "EUR",
+      "balance": "12500.50"
+    }
+  ]
+}
